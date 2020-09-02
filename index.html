@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet"
+			href="https://fonts.googleapis.com/css?family=Lato">
+		<link rel="stylesheet" href="style.css">
+
+
+	</head>
+	<body>
+		<div id="drop-area">
+			<form class="my-form">
+				<p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
+				<input type="file" id="fileElem" multiple onchange="handleFiles(this.files)">
+				<label class="button" for="fileElem">Select some files</label>
+			</form>
+		</div>
+
+		<table id="splits">
+			<tr>
+				<th>
+				</th>
+				<th colspan="2">
+					Personal Best
+				</th>
+				<th colspan="3">
+					Gold
+				</th>
+				<th colspan="3">Average</th>
+			</tr>
+			<tr>
+				<th>
+					Split Name
+				</th>
+				<th>
+					Split
+				</th>
+				<th>
+					Segment
+				</th>
+				<th>
+					Split
+				</th>
+				<th>
+					Segment
+				</th>
+				<th>
+					vs PB
+				</th>
+				<th>
+					Split
+				</th>
+				<th>
+					Segment
+				</th>
+				<th>
+					vs PB
+				</th>
+			</tr>
+		</table>
+		<script src="script.js"></script>
+	</body>
+</html>
