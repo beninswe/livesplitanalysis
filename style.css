@@ -244,6 +244,8 @@ body {
 	background: #222222;
 	width: 100%;
 	flex-wrap: wrap;
+}
+
 
 .tabs .input:nth-of-type(1):checked ~ .panel:nth-of-type(1) {
 	display: flex;
