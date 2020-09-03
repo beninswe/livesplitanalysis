@@ -8,56 +8,86 @@
 
 	</head>
 	<body>
-		<div id="drop-area">
-			<form class="my-form">
-				<p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
-				<input type="file" id="fileElem" multiple onchange="handleFiles(this.files)">
-				<label class="button" for="fileElem">Select some files</label>
-			</form>
+		<div id="drop-areaholder">
+			<div id="drop-area">
+				<form class="my-form">
+					<p>Upload your splits by dropping your lss file here, or clicking the button below</p>
+					<input type="file" id="fileElem" onchange="handleFiles(this.files)">
+					<label class="button" for="fileElem">Select .lss file</label>
+				</form>
+			</div>
 		</div>
 
-		<table id="splits">
-			<tr>
-				<th>
-				</th>
-				<th colspan="2">
-					Personal Best
-				</th>
-				<th colspan="3">
-					Gold
-				</th>
-				<th colspan="3">Average</th>
-			</tr>
-			<tr>
-				<th>
-					Split Name
-				</th>
-				<th>
-					Split
-				</th>
-				<th>
-					Segment
-				</th>
-				<th>
-					Split
-				</th>
-				<th>
-					Segment
-				</th>
-				<th>
-					vs PB
-				</th>
-				<th>
-					Split
-				</th>
-				<th>
-					Segment
-				</th>
-				<th>
-					vs PB
-				</th>
-			</tr>
-		</table>
+		<div id="results" class="hidden">
+			<div class="infopanel">
+				<h1>
+					<span id="gamename"></span>
+					<span id="categoryname"></span>
+				</h1>
+
+			</div>
+			<div class="tabs">
+				<input name="tabs" id="tab-splits" class="input" type="radio" hidden href="tab-splits" checked="checked">
+				<input name="tabs" id="tab-pbhistory" class="input" type="radio" hidden href="tab-pbhistory">
+				<label class="label" for="tab-splits">Splits</label>
+				<label class="label" for="tab-pbhistory">PB History</label>
+				<div class="panel">
+					<table id="splits">
+						<tr>
+							<th>
+							</th>
+							<th colspan="2">
+								Personal Best
+							</th>
+							<th colspan="3">
+								Gold
+							</th>
+							<th colspan="3">Average</th>
+						</tr>
+						<tr>
+							<th>
+								Split Name
+							</th>
+							<th>
+								Split
+							</th>
+							<th>
+								Segment
+							</th>
+							<th>
+								Split
+							</th>
+							<th>
+								Segment
+							</th>
+							<th>
+								vs PB
+							</th>
+							<th>
+								Split
+							</th>
+							<th>
+								Segment
+							</th>
+							<th>
+								vs PB
+							</th>
+						</tr>
+					</table>
+				</div>
+
+				<div class="panel">
+					<table id="pbhistory">
+						<tr>
+							<th>Attempt</th>
+							<th>Date</th>
+							<th>PB Time</th>
+						</tr>
+					</table>
+				</div>
+			</div>
+
+		</div>
 		<script src="script.js"></script>
 	</body>
 </html>

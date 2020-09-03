@@ -38,9 +38,12 @@ class Duration {
 			return 0
 		})
 	}
+	plainformat() {
+		return this.getFormattedHour() + ':' + this.getFormattedMinute() + ':' + this.getFormattedSecond() + '.' + this.getFormattedMS()
+	}
 	format( gold ) {
 		var extra =""
-		var full = this.getFormattedHour() + ':' + this.getFormattedMinute() + ':' + this.getFormattedSecond() + '.' + this.getFormattedMS()
+		var full = this.plainformat()
 		var ret = this.getFormattedMinute() + ':' + this.getFormattedSecond()
 		if ( this.hours > 0 ) {
 			ret = this.getFormattedHour() + ':' + ret
@@ -123,20 +126,28 @@ class Duration {
 
 class SplitsFile {
 	lssDoc
-
+	game
+	category
+	attemptcount
+	#splits
+	#attempts
 	constructor( lss ) {
 		var parser = new DOMParser()
 		this.lssDoc = parser.parseFromString(text,"text/xml")
-		console.log(this.lssDoc.getElementsByTagName("GameName")[0].textContent)
-
+		this.game = this.lssDoc.getElementsByTagName("GameName")[0].textContent
+		this.category = this.lssDoc.getElementsByTagName("CategoryName")[0].textContent
+		this.attemptcount = this.lssDoc.getElementsByTagName("AttemptCount")[0].textContent
 	}
 
 	get splits() {
+		if ( this.#splits ) {
+			return this.#splits
+		}
 		var totalsofar = {
 			'realtime': new Duration(0),
 			'gametime': new Duration(0)
 		}
-		return Array.from(this.lssDoc.querySelectorAll("Segment")).map( (a, index) => {
+		this.#splits =  Array.from(this.lssDoc.querySelectorAll("Segment")).map( (a, index) => {
 			var splittimes = {}
 
 			Array.from(a.querySelectorAll("SplitTime")).forEach( b => {
@@ -145,7 +156,6 @@ class SplitsFile {
 					'gametime': new Duration(b.querySelector("GameTime").textContent)
 				}
 			})
-
 			var allsplits = Array.from(a.querySelectorAll('SegmentHistory Time')).map( c => {
 				return {
 					'attempt': c.getAttribute('id'),
@@ -195,10 +205,70 @@ class SplitsFile {
 				"allsplits": allsplits
 			}
 		})
+		return this.#splits
 	}
 
 	get attempts() {
+		if ( this.#attempts ) {
+			return this.#attempts
+		}
+		console.log("thinking")
+		var lastpb = {
+			'realtime': null,
+			'gametime': null
+		}
 
+		this.#attempts = Array.from(this.lssDoc.querySelectorAll("AttemptHistory Attempt")).map( (a, index) => {
+			var id = a.getAttribute('id')
+			var realtime = a.querySelector("RealTime") ? new Duration(a.querySelector("RealTime").textContent ) : null
+			var gametime = a.querySelector("GameTime") ? new Duration(a.querySelector("GameTime").textContent ) : null
+
+			var wasrtpb = false
+			var wasgtpb = false
+			if ( realtime ) {
+				if ( !lastpb.realtime || realtime.lt( lastpb.realtime ) ) {
+					lastpb.realtime = realtime
+					wasrtpb = true
+
+				}
+			}
+			if ( gametime ) {
+				if ( !lastpb.gametime || gametime.lt( lastpb.gametime ) ) {
+					lastpb.gametime = gametime
+					wasgtpb = true
+
+				}
+			}
+			var completed = !!(gametime || realtime)
+			var diedat = null
+			var diedatindex = null
+			if ( !completed ) {
+
+				var alltimes = Array.from(this.lssDoc.querySelectorAll("SegmentHistory Time[id='" + id +"']"))
+				var indexofSplit = 0
+				if ( alltimes.length ) {
+					var segment = alltimes[alltimes.length - 1].parentNode.parentNode
+					indexofSplit = Array.from(segment.parentNode.children).indexOf(segment) + 1
+
+				}
+				diedat = this.splits[indexofSplit].name
+				diedatindex = indexofSplit
+
+			}
+			return {
+				id: id,
+				started: a.getAttribute('started'),
+				ended: a.getAttribute('ended'),
+				realtime: realtime,
+				gametime: gametime,
+				wasrtpb: wasrtpb,
+				wasgtpb: wasgtpb,
+				completed: completed,
+				diedat: diedat,
+				diedatindex: diedatindex
+			}
+		})
+		return this.#attempts
 	}
 }
 
@@ -243,8 +313,12 @@ function uploadFile(file) {
 	var reader = new FileReader();
 	reader.onload = (e) => {
 		text = reader.result
+		document.getElementById("drop-areaholder").classList.add('hide')
+		window.setTimeout(() => document.getElementById("drop-areaholder").classList.add('hidden'), 1000)
+
 		var lss = new SplitsFile(text)
-		var prevsplit = new Duration(0)
+		document.getElementById("gamename").textContent = lss.game
+		document.getElementById("categoryname").textContent = lss.category
 		let goldtotal = new Duration(0)
 		let avgtotal = new Duration(0)
 		lss.splits.forEach( (seg) => {
@@ -292,9 +366,21 @@ function uploadFile(file) {
 				</tr>
 
 			`)
-			prevsplit = cursplit
 		})
-
+		lss.attempts.filter((e) => {
+			return e.wasgtpb || e.wasrtpb
+		}).forEach( (seg) => {
+			document.getElementById("pbhistory").insertAdjacentHTML('beforeend',`
+				<tr>
+					<td>
+						${seg.id}
+					</td>
+					<td>${seg.started}</td>
+					<td>${seg.realtime.format()}</td>
+				</tr>
+			`)
+		})
+		document.getElementById("results").classList.remove('hidden')
 	}
 	reader.readAsText(file)
 	console.log(file)
