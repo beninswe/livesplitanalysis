@@ -1,89 +1,4 @@
-/* Box sizing rules */
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-}
-
-/* Remove default padding */
-ul[class],
-ol[class] {
-	padding: 0;
-}
-
-/* Remove default margin */
-body,
-h1,
-h2,
-h3,
-h4,
-p,
-ul[class],
-ol[class],
-figure,
-blockquote,
-dl,
-dd {
-	margin: 0;
-}
-
-/* Set core root defaults */
-html {
-	scroll-behavior: smooth;
-}
-
-/* Set core body defaults */
-body {
-	min-height: 100vh;
-	text-rendering: optimizeSpeed;
-	line-height: 1.5;
-}
-
-/* Remove list styles on ul, ol elements with a class attribute */
-ul[class],
-ol[class] {
-	list-style: none;
-}
-
-/* A elements that don't have a class get default styles */
-a:not([class]) {
-	text-decoration-skip-ink: auto;
-}
-
-/* Make images easier to work with */
-img,
-picture {
-	max-width: 100%;
-	display: block;
-}
-
-/* Natural flow and rhythm in articles by default */
-article > * + * {
-	margin-top: 1em;
-}
-
-/* Inherit fonts for inputs and buttons */
-input,
-button,
-textarea,
-select {
-	font: inherit;
-}
-
-/* Blur images when they have no alt attribute */
-img:not([alt]) {
-	filter: blur(10px);
-}
-
-/* Remove all animations and transitions for people that prefer not to see them */
-@media (prefers-reduced-motion: reduce) {
-	* {
-		animation-duration: 0.01ms !important;
-		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
-		scroll-behavior: auto !important;
-	}
-}
+@import 'reset.css';
 
 .hidden {
 	display: none;
@@ -119,9 +34,7 @@ img:not([alt]) {
 #drop-area.highlight {
 	border-color: purple;
 }
-p {
-	margin-top: 0;
-}
+
 .my-form {
 	margin-bottom: 10px;
 }
@@ -158,23 +71,24 @@ body {
 	padding: 2rem;
 }
 
+.table {
+	line-height: 2em;
+	border-collapse: collapse;
+}
+
 #splits {
 	width: 100%;
 
-	line-height: 2em;
-
-
 }
-#splits tbody:nth-child(even) {
+.table tr:nth-child(even) {
 	background: #2a2a2a;
 }
-#splits td {
+.table td {
 	text-align: center;
 }
 
 #splits tr > td:first-child {
 	text-align: left;
-	padding-left: 1rem;
 }
 
 .green {
@@ -188,7 +102,13 @@ body {
 .gold {
 	color: gold;
 }
+.gold-l {
+	border-left: 1px solid rgba(255,215,0,0.25);
+}
 
+.gold-r {
+	border-right: 1px solid  rgba(255,215,0,0.25);
+}
 
 #categoryname {
 	display: block;
@@ -291,4 +211,69 @@ body {
 	border-bottom: 2px solid white;
 	background: #2a2a2a;
 	color: #D4D4D4;
+}
+
+
+#gameicon {
+	max-width: 100px;
+	max-height: 100px;
+	padding-right: 1rem;
+
+}
+.infopanel  {
+	display: flex;
+}
+.splitname {
+	display: grid;
+	grid-template-columns: min-content auto;
+	align-items: center;
+	grid-gap: 5px;
+
+}
+.splitname img {
+	min-width: 2rem;
+	max-width: 2rem;
+	justify-self: center;
+}
+
+#attempthistory {
+	width: 100%;
+}
+td.rightalign {
+	text-align: right;
+	padding-right: 0.5rem;
+}
+td.leftalign {
+	text-align: left;
+	padding-left: 0.5rem;
+}
+
+#attempthistory .attempt {
+	display: none;
+}
+
+input#pbonly:checked ~ #attempthistory .attempt.pbrun,
+input#completedonly:checked ~ #attempthistory .attempt.completed,
+input#allruns:checked ~ #attempthistory .attempt {
+	display: table-row;
+}
+
+input#pbonly:checked ~ #attempthistory .attempt.pbeven,
+input#completedonly:checked ~ #attempthistory .attempt.completedeven  {
+	background: #2a2a2a;
+}
+input#pbonly:checked ~ #attempthistory .attempt.pbodd,
+input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
+	background: #222222;
+}
+
+
+.history {
+	width: 47%;
+}
+
+.history label {
+	margin-left: 0.5rem;
+	margin-right: 1.5rem;
+	line-height: 2.5rem;
 }

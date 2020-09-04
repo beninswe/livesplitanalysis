@@ -5,7 +5,7 @@
 			href="https://fonts.googleapis.com/css?family=Lato">
 		<link rel="stylesheet" href="style.css">
 
-
+		<script type="module" src="script.js"></script>
 	</head>
 	<body>
 		<div id="drop-areaholder">
@@ -20,6 +20,9 @@
 
 		<div id="results" class="hidden">
 			<div class="infopanel">
+				<div id="gameicon">
+
+				</div>
 				<h1>
 					<span id="gamename"></span>
 					<span id="categoryname"></span>
@@ -30,19 +33,19 @@
 				<input name="tabs" id="tab-splits" class="input" type="radio" hidden href="tab-splits" checked="checked">
 				<input name="tabs" id="tab-pbhistory" class="input" type="radio" hidden href="tab-pbhistory">
 				<label class="label" for="tab-splits">Splits</label>
-				<label class="label" for="tab-pbhistory">PB History</label>
+				<label class="label" for="tab-pbhistory">Attempt History</label>
 				<div class="panel">
-					<table id="splits">
+					<table id="splits" class="table">
 						<tr>
 							<th>
 							</th>
 							<th colspan="2">
 								Personal Best
 							</th>
-							<th colspan="3">
+							<th colspan="3" class="gold-l gold-r">
 								Gold
 							</th>
-							<th colspan="3">Average</th>
+							<th colspan="3" class="gold-r">Average</th>
 						</tr>
 						<tr>
 							<th>
@@ -54,13 +57,13 @@
 							<th>
 								Segment
 							</th>
-							<th>
+							<th class="gold-l">
 								Split
 							</th>
 							<th>
 								Segment
 							</th>
-							<th>
+							<th class="gold-r">
 								vs PB
 							</th>
 							<th>
@@ -71,23 +74,40 @@
 							</th>
 							<th>
 								vs PB
+							</th>
+							<th class="gold-l">
+								Resets
+							</th>
+							<th>
+								Best Pace
 							</th>
 						</tr>
+						<tbody>
+
+						</tbody>
 					</table>
 				</div>
 
 				<div class="panel">
-					<table id="pbhistory">
-						<tr>
-							<th>Attempt</th>
-							<th>Date</th>
-							<th>PB Time</th>
-						</tr>
-					</table>
+					<div class="history">
+
+						<input type="radio" name="runtype" id="pbonly" checked="checked"><label for="pbonly">PBs Only</label><input type="radio" name="runtype" id="completedonly"><label for="completedonly">Completed Runs Only</label><input type="radio" name="runtype" id="allruns"><label for="allruns">All Runs</label><br>
+						<table id="attempthistory" class="table">
+							<tr>
+								<th>Attempt</th>
+								<th>Date</th>
+								<th>Time</th>
+								<th>Improvement</th>
+							</tr>
+							<tbody>
+
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 
 		</div>
-		<script src="script.js"></script>
+
 	</body>
 </html>
