@@ -31,6 +31,7 @@ dropArea.addEventListener('drop', (e) => {
 function handleFiles(files) {
 	([...files]).forEach(uploadFile)
 }
+window.handleFiles = handleFiles
 
 function uploadFile(file) {
 	var reader = new FileReader();
