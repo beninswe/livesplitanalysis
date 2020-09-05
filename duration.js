@@ -62,15 +62,20 @@ export default class Duration {
 		return `<abbr title="${full}" ${extra}>${ret}</abbr>`
 	}
 
-	formatcomparison() {
+	formatcomparison(min, max) {
 		var ret = this.format()
+		var percentdiff = 0
 		if ( this.negative ) {
-			return `<span class="green">-${ret}</span>`
+			if ( min ) {
+				percentdiff = (this.totalmilliseconds/min.totalmilliseconds)*100
+			}
+			return `<div class="green"><div style="--p: ${percentdiff}%"></div>-${ret}</div>`
 		}
 		if ( this.totalmilliseconds == 0 ) {
-			return `<span>${ret}</span>`
+			return `<div>${ret}</div>`
 		}
-		return `<span class="red">+${ret}</span>`
+		percentdiff = (this.totalmilliseconds/max.totalmilliseconds)*100
+		return `<div class="red"><div style="--p: ${percentdiff}%"></div>+${ret}</div>`
 	}
 
 	getFormattedHour() {
@@ -125,6 +130,23 @@ export default class Duration {
 	eq ( other ) {
 		other = this.#verify( other )
 		return this.totalmilliseconds == other.totalmilliseconds
+	}
+	max ( other ) {
+		other = this.#verify( other )
+		if ( this.totalmilliseconds >= other.totalmilliseconds ) {
+			return this
+		}
+		return other
+	}
+	min ( other ) {
+		other = this.#verify( other )
+		if ( this.totalmilliseconds <= other.totalmilliseconds ) {
+			return this
+		}
+		return other
+	}
+	toString() {
+		return this.plainformat()
 	}
 
 }

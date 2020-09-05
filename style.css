@@ -92,12 +92,34 @@ body {
 }
 
 .green {
+	position: relative;
 	color: limegreen;
+	width: 100%;
+	height: 100%;
 }
 
 .red {
+	position: relative;
 	color: lightcoral;
+	width: 100%;
+	height: 100%;
 }
+
+.green > div {
+	--c: rgba(0,150,0,0.25);
+}
+.red > div {
+	--c: rgba(150,0,0,0.25);
+}
+.green > div, .red > div {
+	position: absolute;
+	top:0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(to right, var(--c) calc(var(--p) - 5%), transparent calc(var(--p) + 5%) );
+}
+
 
 .gold {
 	color: gold;

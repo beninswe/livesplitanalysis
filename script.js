@@ -48,6 +48,21 @@ function uploadFile(file) {
 		}
 		let goldtotal = new Duration(0)
 		let avgtotal = new Duration(0)
+		let maxdifftogold = lss.splits.reduce( (acc, seg) => {
+			let thisgold = seg.pbsegment.realtime.sub(seg.gold.realtime)
+			return thisgold.max(acc)
+		}, 0 )
+
+		let maxdifftoavg = lss.splits.reduce( (acc, seg) => {
+			let thisavg = seg.pbsegment.realtime.sub(seg.average.realtime.average)
+			return thisavg.max(acc)
+		}, 0 )
+		let mindifftoavg = lss.splits.reduce( (acc, seg) => {
+			let thisavg = seg.pbsegment.realtime.sub(seg.average.realtime.average)
+			return thisavg.min(acc)
+		}, 0 )
+
+		console.log( maxdifftoavg, "<->", mindifftoavg)
 		lss.splits.forEach( (seg) => {
 
 			var avgtime = seg.average.realtime.average
@@ -78,7 +93,7 @@ function uploadFile(file) {
 						${goldsplit.format()}
 					</td>
 					<td class="gold-r">
-						${goldvspb.formatcomparison()}
+						${goldvspb.formatcomparison(new Duration(0), maxdifftogold)}
 					</td>
 					<td>
 						${avgtotal.format()}
@@ -88,7 +103,7 @@ function uploadFile(file) {
 					</td>
 
 					<td >
-						${avgvspb.formatcomparison()}
+						${avgvspb.formatcomparison(mindifftoavg, maxdifftoavg)}
 					</td>
 					<td class="gold-l">
 						${seg.resets}
@@ -103,6 +118,10 @@ function uploadFile(file) {
 		})
 		var pbcounter = 0
 		var completedruncounter = 0
+		let bestpbimprovement = lss.attempts.filter( seg => (seg.rtpbimprovement || seg.gtpbimprovement) ).reduce( ( acc, seg ) => {
+			return seg.rtpbimprovement.min(acc)
+		}, 0)
+		console.log( bestpbimprovement )
 		lss.attempts.filter( (seg) => {
 
 			let attempthtml = `
@@ -116,7 +135,7 @@ function uploadFile(file) {
 			if ( seg.completed ) {
 				attempthtml += `
 				<td class="rightalign">${seg.completed ? seg.realtime.format() : ''}</td>
-				<td class="rightalign">${(seg.wasgtpb || seg.wasrtpb) ? (seg.rtpbimprovement ? seg.rtpbimprovement.formatcomparison() : new Duration(0).formatcomparison()) : ''}</td>`
+				<td class="rightalign">${(seg.wasgtpb || seg.wasrtpb) ? (seg.rtpbimprovement ? seg.rtpbimprovement.formatcomparison(bestpbimprovement, 0) : new Duration(0).formatcomparison()) : ''}</td>`
 			}	else {
 				attempthtml += `
 				<td class="leftalign" colspan="2">Reset at ${seg.diedat}</td>
