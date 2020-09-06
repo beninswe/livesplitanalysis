@@ -61,6 +61,8 @@ function uploadFile(file) {
 				break;
 		}
 
+		let pbattempt = lss.attempts[ [ ...lss.pbs[ timingmethod ] ].pop() -1 ]
+
 		let goldtotal = new Duration(0)
 		let avgtotal = new Duration(0)
 		let maxdifftogold = lss.splits.reduce( (acc, seg) => {
@@ -76,7 +78,6 @@ function uploadFile(file) {
 			let thisavg = seg.pbsegment[timingmethod].sub(seg.average[timingmethod].average)
 			return thisavg.min(acc)
 		}, 0 )
-
 		lss.splits.forEach( (seg) => {
 
 			var avgtime = seg.average[timingmethod].average
@@ -87,8 +88,7 @@ function uploadFile(file) {
 			goldtotal = goldtotal.add(goldsplit)
 			avgtotal = avgtotal.add(avgtime)
 			var avgvspb = cursegment.sub(avgtime)
-
-			document.querySelector("#splits tbody").insertAdjacentHTML('beforeend',`
+			let splithtml = `
 				<tr>
 					<td class="splitname">
 						${seg.icon ? seg.icon.outerHTML : '<i></i>'}
@@ -128,10 +128,14 @@ function uploadFile(file) {
 
 				</tr>
 
-			`)
+			`
+			document.querySelector("#splits tbody").insertAdjacentHTML('beforeend', splithtml)
 		})
-		var pbcounter = 0
-		var completedruncounter = 0
+
+		document.querySelector( ".personalbest .info" ).innerHTML = pbattempt[timingmethod].format()
+		document.querySelector(".sumofbest .info").innerHTML = goldtotal.format()
+		document.querySelector(".pbvssob .info").innerHTML = pbattempt[timingmethod].sub(goldtotal).formatcomparison()
+		document.querySelector(".attempts .info").textContent = lss.pbs[timingmethod].length + ' / ' + lss.completedruns[timingmethod].length + ' / ' + lss.attemptcount
 		let bestpbimprovement = lss.attempts.filter( seg => (( timingmethod == "realtime" &&  seg.rtpbimprovement ) ||  (timingmethod == "gametime" && seg.gtpbimprovement) ) ).reduce( ( acc, seg ) => {
 			if ( timingmethod == "realtime" ) {
 				return seg.rtpbimprovement.min(acc)
@@ -139,9 +143,11 @@ function uploadFile(file) {
 			return seg.gtpbimprovement.min(acc)
 		}, 0)
 		lss.attempts.filter( (seg) => {
+			let pbfound = lss.pbs[timingmethod].indexOf(seg.id)
+			let completedfound = lss.completedruns[timingmethod].indexOf(seg.id)
 
 			let attempthtml = `
-			<tr class="attempt ${(( seg.wasgtpb && timingmethod == "gametime" ) || ( seg.wasrtpb && timingmethod == "realtime" ))? 'pbrun ' + ( (pbcounter++ %2 == 0 ) ? 'pbeven' : 'pbodd') : ''} ${(seg.completed.realtime || seg.completed.gametime)? 'completed ' + ( (completedruncounter++ %2 == 0 ) ? 'completedeven' : 'completedodd') : ''}">
+			<tr class="attempt ${ pbfound >= 0 ? 'pbrun ' + ( (pbfound %2 == 0 ) ? 'pbeven' : 'pbodd')  : '' } ${completedfound >= 0 ? 'completed ' + ( (completedfound %2 == 0 ) ? 'completedeven' : 'completedodd') : ''}">
 				<td class="rightalign">
 					${seg.id}
 				</td>

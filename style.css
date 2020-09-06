@@ -249,11 +249,18 @@ body {
 .infopanel h2 {
 	margin-top: 11px;
 	font-size: 1.3rem;
+	text-align: center;
 }
 .infopanel > * {
 	margin-right: 1rem;
 }
+.infopanel .info {
+	text-align: center;
+}
 
+.gameinfo {
+	max-width: 40%;
+}
 .splitname {
 	display: grid;
 	grid-template-columns: min-content auto;
@@ -320,6 +327,3 @@ input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
 
 }
 
-.gameinfo {
-	max-width: 40%;
-}

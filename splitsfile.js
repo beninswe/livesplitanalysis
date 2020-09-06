@@ -5,6 +5,14 @@ export default class SplitsFile {
 	category
 	attemptcount
 	gameicon
+	pbs = {
+		realtime: [],
+		gametime: []
+	}
+	completedruns = {
+		realtime: [],
+		gametime: []
+	}
 	#splits
 	#attempts
 	constructor( lss ) {
@@ -210,7 +218,18 @@ export default class SplitsFile {
 				}
 			}
 
-
+			if ( wasrtpb ) {
+				this.pbs.realtime.push( id )
+			}
+			if ( wasgtpb ) {
+				this.pbs.gametime.push( id )
+			}
+			if ( completed.realtime ) {
+				this.completedruns.realtime.push( id )
+			}
+			if ( completed.gametime ) {
+				this.completedruns.gametime.push( id )
+			}
 			return {
 				id: id,
 				started: this.#formatDate(a.getAttribute('started')),

@@ -74,7 +74,9 @@ export default class Duration {
 		if ( this.totalmilliseconds == 0 ) {
 			return `<div>${ret}</div>`
 		}
-		percentdiff = (this.totalmilliseconds/max.totalmilliseconds)*100
+		if ( max ) {
+			percentdiff = (this.totalmilliseconds/max.totalmilliseconds)*100
+		}
 		return `<div class="red"><div style="--p: ${percentdiff}%"></div>+${ret}</div>`
 	}
 
