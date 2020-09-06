@@ -12,6 +12,11 @@
 			<div id="drop-area">
 				<form class="my-form">
 					<p>Upload your splits by dropping your lss file here, or clicking the button below</p>
+					<div class="timingchooser">
+						Timing: <input type="radio" name="timing" id="timingauto" checked="checked"><label for="timingauto"><abbr title="Game Time if exists, else Real Time">Auto</abbr></label>
+						<input type="radio" name="timing" id="timinggt"><label for="timinggt">Game Time</label>
+						<input type="radio" name="timing" id="timingrt"><label for="timingrt">Real Time</label>
+					</div>
 					<input type="file" id="fileElem" onchange="handleFiles(this.files)">
 					<label class="button" for="fileElem">Select .lss file</label>
 				</form>
@@ -23,10 +28,16 @@
 				<div id="gameicon">
 
 				</div>
-				<h1>
+				<h1 class="gameinfo">
 					<span id="gamename"></span>
 					<span id="categoryname"></span>
 				</h1>
+				<div class="timing">
+					<h2>Timing</h2>
+					<div class="info">
+						Game Time
+					</div>
+				</div>
 
 			</div>
 			<div class="tabs">

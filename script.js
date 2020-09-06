@@ -46,29 +46,43 @@ function uploadFile(file) {
 		if (lss.gameicon) {
 			document.getElementById("gameicon").appendChild(lss.gameicon)
 		}
+
+		let timingid = document.querySelector(".timingchooser :checked").id
+		let timingmethod = "gametime"
+		switch( timingid ) {
+			case "timingauto":
+				if (  lss.splits[lss.splits.length-1].pb.gametime && lss.splits[lss.splits.length-1].pb.gametime.gt(0) ) {
+					break
+				}
+				// falls through
+			case "timingrt":
+				timingmethod = "realtime"
+				document.querySelector(".timing .info").textContent = "Real Time"
+				break;
+		}
+
 		let goldtotal = new Duration(0)
 		let avgtotal = new Duration(0)
 		let maxdifftogold = lss.splits.reduce( (acc, seg) => {
-			let thisgold = seg.pbsegment.realtime.sub(seg.gold.realtime)
+			let thisgold = seg.pbsegment[timingmethod].sub(seg.gold[timingmethod])
 			return thisgold.max(acc)
 		}, 0 )
 
 		let maxdifftoavg = lss.splits.reduce( (acc, seg) => {
-			let thisavg = seg.pbsegment.realtime.sub(seg.average.realtime.average)
+			let thisavg = seg.pbsegment[timingmethod].sub(seg.average[timingmethod].average)
 			return thisavg.max(acc)
 		}, 0 )
 		let mindifftoavg = lss.splits.reduce( (acc, seg) => {
-			let thisavg = seg.pbsegment.realtime.sub(seg.average.realtime.average)
+			let thisavg = seg.pbsegment[timingmethod].sub(seg.average[timingmethod].average)
 			return thisavg.min(acc)
 		}, 0 )
 
-		console.log( maxdifftoavg, "<->", mindifftoavg)
 		lss.splits.forEach( (seg) => {
 
-			var avgtime = seg.average.realtime.average
-			var cursplit = seg.pb.realtime
-			var cursegment = seg.pbsegment.realtime
-			var goldsplit = seg.gold.realtime
+			var avgtime = seg.average[timingmethod].average
+			var cursplit = seg.pb[timingmethod]
+			var cursegment = seg.pbsegment[timingmethod]
+			var goldsplit = seg.gold[timingmethod]
 			var goldvspb = cursegment.sub(goldsplit)
 			goldtotal = goldtotal.add(goldsplit)
 			avgtotal = avgtotal.add(avgtime)
@@ -109,7 +123,7 @@ function uploadFile(file) {
 						${seg.resets}
 					</td>
 					<td>
-						${seg.bestpace.realtime.format()} in #${seg.bestpace.attemptid}
+						${seg.bestpace[timingmethod].format()} in #${seg.bestpace.attemptid}
 					</td>
 
 				</tr>
@@ -118,24 +132,26 @@ function uploadFile(file) {
 		})
 		var pbcounter = 0
 		var completedruncounter = 0
-		let bestpbimprovement = lss.attempts.filter( seg => (seg.rtpbimprovement || seg.gtpbimprovement) ).reduce( ( acc, seg ) => {
-			return seg.rtpbimprovement.min(acc)
+		let bestpbimprovement = lss.attempts.filter( seg => (( timingmethod == "realtime" &&  seg.rtpbimprovement ) ||  (timingmethod == "gametime" && seg.gtpbimprovement) ) ).reduce( ( acc, seg ) => {
+			if ( timingmethod == "realtime" ) {
+				return seg.rtpbimprovement.min(acc)
+			}
+			return seg.gtpbimprovement.min(acc)
 		}, 0)
-		console.log( bestpbimprovement )
 		lss.attempts.filter( (seg) => {
 
 			let attempthtml = `
-			<tr class="attempt ${(seg.wasgtpb || seg.wasrtpb)? 'pbrun ' + ( (pbcounter++ %2 == 0 ) ? 'pbeven' : 'pbodd') : ''} ${(seg.completed)? 'completed ' + ( (completedruncounter++ %2 == 0 ) ? 'completedeven' : 'completedodd') : ''}">
+			<tr class="attempt ${(( seg.wasgtpb && timingmethod == "gametime" ) || ( seg.wasrtpb && timingmethod == "realtime" ))? 'pbrun ' + ( (pbcounter++ %2 == 0 ) ? 'pbeven' : 'pbodd') : ''} ${(seg.completed.realtime || seg.completed.gametime)? 'completed ' + ( (completedruncounter++ %2 == 0 ) ? 'completedeven' : 'completedodd') : ''}">
 				<td class="rightalign">
 					${seg.id}
 				</td>
 				<td>${seg.started}</td>
 			`
 
-			if ( seg.completed ) {
+			if ( ( seg.completed.realtime || seg.completed.gametime ) && seg[timingmethod] ) {
 				attempthtml += `
-				<td class="rightalign">${seg.completed ? seg.realtime.format() : ''}</td>
-				<td class="rightalign">${(seg.wasgtpb || seg.wasrtpb) ? (seg.rtpbimprovement ? seg.rtpbimprovement.formatcomparison(bestpbimprovement, 0) : new Duration(0).formatcomparison()) : ''}</td>`
+				<td class="rightalign">${seg[timingmethod].format()}</td>
+				<td class="rightalign">${( seg.wasgtpb && seg.gtpbimprovement && timingmethod == "gametime" ) ? seg.gtpbimprovement.formatcomparison(bestpbimprovement, 0) : ( seg.wasrtpb && seg.rtpbimprovement && timingmethod == "realtime" ) ? seg.rtpbimprovement.formatcomparison(bestpbimprovement, 0) : ''}</td>`
 			}	else {
 				attempthtml += `
 				<td class="leftalign" colspan="2">Reset at ${seg.diedat}</td>

@@ -130,27 +130,7 @@ export default class SplitsFile {
 			var wasgtpb = false
 			var rtpbimprovement = false
 			var gtpbimprovement = false
-			if ( realtime ) {
-				if ( !lastpb.realtime || realtime.lt( lastpb.realtime ) ) {
-					if ( lastpb.realtime ) {
-						rtpbimprovement = realtime.sub(lastpb.realtime)
-					}
-					lastpb.realtime = realtime
-					wasrtpb = true
 
-				}
-			}
-			if ( gametime ) {
-				if ( !lastpb.gametime || gametime.lt( lastpb.gametime ) ) {
-					if ( lastpb.gametime ) {
-						gtpbimprovement = gametime.sub(lastpb.gametime)
-					}
-					lastpb.gametime = gametime
-					wasgtpb = true
-
-				}
-			}
-			var completed = !!(gametime || realtime)
 			var diedat = null
 			var diedatindex = null
 
@@ -187,16 +167,47 @@ export default class SplitsFile {
 					}
 				}
 			})
-			if ( !completed ) {
+
+			var completed = {
+				realtime: !!realtime && realtime.gte(attemptduration.realtime),
+				gametime: !!gametime && gametime.gte(attemptduration.gametime)
+			}
+			console.log(id, completed)
+			if ( completed.realtime ) {
+				if ( !lastpb.realtime || realtime.lt( lastpb.realtime ) ) {
+					if ( lastpb.realtime ) {
+						rtpbimprovement = realtime.sub(lastpb.realtime)
+					}
+					lastpb.realtime = realtime
+					wasrtpb = true
+
+				}
+			}
+			if ( completed.gametime ) {
+				if ( !lastpb.gametime || gametime.lt( lastpb.gametime ) ) {
+					if ( lastpb.gametime ) {
+						gtpbimprovement = gametime.sub(lastpb.gametime)
+					}
+					lastpb.gametime = gametime
+					wasgtpb = true
+
+				}
+			}
+
+			if ( !completed.realtime && !completed.gametime ) {
 				var indexofSplit = 0
 				if ( alltimes.length ) {
 					var segment = alltimes[alltimes.length - 1].parentNode.parentNode
 					indexofSplit = Array.from(segment.parentNode.children).indexOf(segment) + 1
 
 				}
-				diedat = this.splits[indexofSplit].name
-				this.splits[indexofSplit].resets++
-				diedatindex = indexofSplit
+				if ( this.splits[indexofSplit] ) {
+					diedat = this.splits[indexofSplit].name
+					this.splits[indexofSplit].resets++
+					diedatindex = indexofSplit
+				} else {
+					diedat = "Unknown - Nonsensical splits?"
+				}
 			}
 
 
