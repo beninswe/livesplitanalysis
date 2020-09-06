@@ -5,6 +5,7 @@ export default class SplitsFile {
 	category
 	attemptcount
 	gameicon
+	othercomparisons = []
 	pbs = {
 		realtime: [],
 		gametime: []
@@ -51,13 +52,30 @@ export default class SplitsFile {
 			'realtime': new Duration(0),
 			'gametime': new Duration(0)
 		}
+		var runningtotalsplits = {}
 		this.#splits =  Array.from(this.lssDoc.querySelectorAll("Segment")).map( (a, index) => {
 			var splittimes = {}
 
 			Array.from(a.querySelectorAll("SplitTime")).forEach( b => {
-				splittimes[b.getAttribute("name")] = {
-					'realtime': b.querySelector("RealTime") ? new Duration(b.querySelector("RealTime").textContent) : false,
-					'gametime':  b.querySelector("GameTime") ? new Duration(b.querySelector("GameTime").textContent) : false
+				var comparisonname = b.getAttribute("name")
+				if ( ! runningtotalsplits[ comparisonname ]) {
+					runningtotalsplits[ comparisonname ] = {
+						'realtime': new Duration(0),
+						'gametime': new Duration(0)
+					}
+				}
+				var rtforsplit = b.querySelector("RealTime") ? new Duration(b.querySelector("RealTime").textContent) : false;
+				var gtforsplit = b.querySelector("GameTime") ? new Duration(b.querySelector("GameTime").textContent) : false
+				splittimes[comparisonname] = {
+					'realtime': rtforsplit,
+					'gametime': gtforsplit,
+					'segmentrealtime': rtforsplit ? rtforsplit.sub( runningtotalsplits[ comparisonname ].realtime ) : false,
+					'segmentgametime': gtforsplit ? gtforsplit.sub( runningtotalsplits[ comparisonname ].gametime ) : false
+
+				}
+				runningtotalsplits[ comparisonname ] = splittimes[comparisonname]
+				if ( comparisonname != "Personal Best" && this.othercomparisons.indexOf( comparisonname ) == -1  ) {
+					this.othercomparisons.push( comparisonname )
 				}
 			})
 			var allsplits = Array.from(a.querySelectorAll('SegmentHistory Time')).map( c => {

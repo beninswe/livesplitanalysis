@@ -78,6 +78,27 @@ function uploadFile(file) {
 			let thisavg = seg.pbsegment[timingmethod].sub(seg.average[timingmethod].average)
 			return thisavg.min(acc)
 		}, 0 )
+
+		let mindiffcomp =  {}
+		let maxdiffcomp =  {}
+		lss.othercomparisons.forEach ( (comp) => {
+			mindiffcomp[comp] = lss.splits.reduce( (acc, seg) => {
+				let thisavg = seg.pbsegment[timingmethod].sub(seg.splittimes[comp]['segment' + timingmethod])
+				return thisavg.min(acc)
+			}, 0 )
+			maxdiffcomp[comp] = lss.splits.reduce( (acc, seg) => {
+				let thisavg = seg.pbsegment[timingmethod].sub(seg.splittimes[comp]['segment' + timingmethod])
+				return thisavg.max(acc)
+			}, 0 )
+			document.querySelector("#bestpaceheader").insertAdjacentHTML('beforebegin', `
+			<th colspan="2" class="gold-r">${comp}</th>
+			`)
+			document.querySelector("#bestpacesplitheader").insertAdjacentHTML('beforebegin', `
+			<th>Segment</th>
+			<th class="gold-r">Split</th>
+			`)
+
+		})
 		lss.splits.forEach( (seg) => {
 
 			var avgtime = seg.average[timingmethod].average
@@ -94,36 +115,62 @@ function uploadFile(file) {
 						${seg.icon ? seg.icon.outerHTML : '<i></i>'}
 						${seg.name}
 					</td>
-					<td>
-						${cursplit.format()}
+					<td class="gold-r">
+						${seg.resets}
 					</td>
 					<td>
 						${cursegment.format( goldsplit )}
 					</td>
+					<td>
+						${cursplit.format()}
+					</td>
 					<td class="gold-l">
-						${goldtotal.format()}
+						<div class="${ goldvspb.gt(0) ? 'timeloss' : '' }" style="--p: ${(goldvspb.totalmilliseconds/maxdifftogold.totalmilliseconds)*100}%">
+							<span class="from">${goldsplit.format()}</span>
+							<span class="diff">${goldvspb.formatcomparison()}</span>
+						</div>
 					</td>
 					<td>
-						${goldsplit.format()}
+						${goldtotal.format()}
 					</td>
-					<td class="gold-r">
-						${goldvspb.formatcomparison(new Duration(0), maxdifftogold)}
+					<td class="gold-l">
+						<div
+							${ avgvspb.gt(0) ? 'class="timeloss" style="--p: ' + (avgvspb.totalmilliseconds/maxdifftoavg.totalmilliseconds)*100 + '%"' : '' }
+							${ avgvspb.lt(0) ? 'class="timegain" style="--p: ' + (avgvspb.totalmilliseconds/mindifftoavg.totalmilliseconds)*100 + '%"' : '' }
+						>
+							<span class="from">${avgtime.format()}</span>
+							<span class="diff">${avgvspb.formatcomparison()}</span>
+						</div>
 					</td>
 					<td>
 						${avgtotal.format()}
 					</td>
-					<td>
-						${avgtime.format()}
-					</td>
-
-					<td >
-						${avgvspb.formatcomparison(mindifftoavg, maxdifftoavg)}
-					</td>
+			`
+			lss.othercomparisons.forEach( (comp) => {
+				var split = seg.splittimes[comp][timingmethod]
+				var segment = seg.splittimes[comp][ 'segment' + timingmethod ]
+				var compvspb = cursegment.sub(segment)
+				splithtml += `
 					<td class="gold-l">
-						${seg.resets}
+					<div
+						${ compvspb.gt(0) ? 'class="timeloss" style="--p: ' + (compvspb.totalmilliseconds/maxdiffcomp[comp].totalmilliseconds)*100 + '%"' : '' }
+						${ compvspb.lt(0) ? 'class="timegain" style="--p: ' + (compvspb.totalmilliseconds/mindiffcomp[comp].totalmilliseconds)*100 + '%"' : '' }
+					>
+						<span class="from">${segment.format()}</span>
+						<span class="diff">${compvspb.formatcomparison()}</span>
+					</div>
+				</td>
+				<td>
+					${split.format()}
+				</td>
+				`
+			})
+			splithtml += `
+					<td class="gold-l">
+						${seg.bestpace[timingmethod].format()}
 					</td>
 					<td>
-						${seg.bestpace[timingmethod].format()} in #${seg.bestpace.attemptid}
+						${seg.bestpace.attemptid}
 					</td>
 
 				</tr>

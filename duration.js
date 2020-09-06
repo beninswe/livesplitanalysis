@@ -69,15 +69,12 @@ export default class Duration {
 			if ( min ) {
 				percentdiff = (this.totalmilliseconds/min.totalmilliseconds)*100
 			}
-			return `<div class="green"><div style="--p: ${percentdiff}%"></div>-${ret}</div>`
+			return `<span class="green">-${ret}</span>`
 		}
 		if ( this.totalmilliseconds == 0 ) {
-			return `<div>${ret}</div>`
+			return `<span>${ret}</span>`
 		}
-		if ( max ) {
-			percentdiff = (this.totalmilliseconds/max.totalmilliseconds)*100
-		}
-		return `<div class="red"><div style="--p: ${percentdiff}%"></div>+${ret}</div>`
+		return `<span class="red">+${ret}</span>`
 	}
 
 	getFormattedHour() {
