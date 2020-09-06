@@ -172,7 +172,7 @@ export default class SplitsFile {
 				realtime: !!realtime && realtime.gte(attemptduration.realtime),
 				gametime: !!gametime && gametime.gte(attemptduration.gametime)
 			}
-			console.log(id, completed)
+
 			if ( completed.realtime ) {
 				if ( !lastpb.realtime || realtime.lt( lastpb.realtime ) ) {
 					if ( lastpb.realtime ) {
