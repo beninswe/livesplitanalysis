@@ -204,7 +204,10 @@ function uploadFile(file) {
 			if ( ( seg.completed.realtime || seg.completed.gametime ) && seg[timingmethod] ) {
 				attempthtml += `
 				<td class="rightalign">${seg[timingmethod].format()}</td>
-				<td class="rightalign">${( seg.wasgtpb && seg.gtpbimprovement && timingmethod == "gametime" ) ? seg.gtpbimprovement.formatcomparison(bestpbimprovement, 0) : ( seg.wasrtpb && seg.rtpbimprovement && timingmethod == "realtime" ) ? seg.rtpbimprovement.formatcomparison(bestpbimprovement, 0) : ''}</td>`
+				<td class="rightalign">
+					${ seg.wasgtpb && seg.gtpbimprovement && timingmethod == "gametime" ? '<div class="timegain" style="--p: ' + (seg.gtpbimprovement.totalmilliseconds/bestpbimprovement.totalmilliseconds)*100 + '%">' + seg.gtpbimprovement.formatcomparison() +  '</div>' : '' }
+					${ seg.wasrtpb && seg.rtpbimprovement && timingmethod == "realtime" ? 'class="timegain" style="--p: ' + (seg.rtpbimprovement.totalmilliseconds/bestpbimprovement.totalmilliseconds)*100 + '%">' + seg.rtpbimprovement.formatcomparison() +  '</div>' : '' }
+				</td>`
 			}	else {
 				attempthtml += `
 				<td class="leftalign" colspan="2">Reset at ${seg.diedat}</td>
