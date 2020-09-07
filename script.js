@@ -217,6 +217,35 @@ function uploadFile(file) {
 			attempthtml += `</tr>`
 			document.querySelector("#attempthistory tbody").insertAdjacentHTML('beforeend', attempthtml)
 		})
+
+
+		var pbsplits = lss.splits.map( (seg) => {
+			return seg.pbsegment[timingmethod].totalmilliseconds
+		})
+		goldtotal = new Duration(0)
+		var sobsplits = lss.splits.map( (seg) => {
+			goldtotal = goldtotal.add(seg.gold[timingmethod])
+			return seg.gold[timingmethod].totalmilliseconds
+		})
+
+		let comptotal = pbattempt[timingmethod].totalmilliseconds
+
+		document.querySelector("#prettycomparisons").insertAdjacentHTML('beforeend', `
+			<div>
+				<div class="bars">
+				${ pbsplits.map( (split, index) => {
+					return `
+						<div style="--w: ${ ( split / comptotal) *100 }%">
+							<div class="goldbar" style="--gw: ${ ( sobsplits[index] / split ) *100 }%"></div>
+							<span class="split">${ lss.splits[index].name.replace(/(\w)[\w]+[\s]?/g, '$1').replace(/-/g, '').replace(/{.*}/g, '') }</span>
+							<span class="time">${ new Duration( split ).plainshortformat() }</span>
+							<span class="pts"><abbr title="Potential time save">Can save</abbr>: ${new Duration( split - sobsplits[index] ).humanformat()}</span>
+						</div>
+					`
+				} ).join("") }
+				</div>
+			</div>
+		`)
 		document.getElementById("results").classList.remove('hidden')
 	}
 	reader.readAsText(file)

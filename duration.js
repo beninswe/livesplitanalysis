@@ -46,6 +46,9 @@ export default class Duration {
 	plainformat() {
 		return this.getFormattedHour() + ':' + this.getFormattedMinute() + ':' + this.getFormattedSecond() + '.' + this.getFormattedMS()
 	}
+	plainshortformat() {
+		return (this.hours > 0 ? this.getFormattedHour() + ':' : '') + this.getFormattedMinute() + ':' + this.getFormattedSecond()
+	}
 	format( gold ) {
 		var extra =""
 		var full = this.plainformat()
@@ -75,6 +78,23 @@ export default class Duration {
 			return `<span>${ret}</span>`
 		}
 		return `<span class="red">+${ret}</span>`
+	}
+	humanformat() {
+		let ret = ""
+		if ( this.hours > 0 ) {
+			ret += this.hours + 'h '
+		}
+		if ( this.minutes > 0 || this.hours > 0 ) {
+			ret += this.minutes + 'm '
+		}
+
+		if ( this.seconds > 0 || ret.length > 0 ) {
+			ret += this.seconds + 's '
+		}
+
+
+		ret += this.milliseconds + 'ms'
+		return ret;
 	}
 
 	getFormattedHour() {

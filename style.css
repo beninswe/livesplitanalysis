@@ -321,3 +321,105 @@ input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
 
 }
 
+
+.bars {
+	width: 100%;
+	display: flex;
+	height: 4rem;
+	overflow-y: visible;
+}
+
+
+.bars > div:nth-of-type(12n+1) {
+	--bg: 0, 31, 63;
+}
+.bars > div:nth-of-type(12n+2) {
+	--bg: 0, 116, 217;
+}
+.bars > div:nth-of-type(12n+3) {
+	--bg: 57, 204, 204;
+}
+.bars > div:nth-of-type(12n+4) {
+	--bg: 61, 153, 112;
+}
+.bars > div:nth-of-type(12n+5) {
+	--bg: 46, 204, 64;
+}
+.bars > div:nth-of-type(12n+6) {
+	--bg: 1, 255, 112;
+}
+.bars > div:nth-of-type(12n+7) {
+	--bg: 255, 220, 0;
+}
+.bars > div:nth-of-type(12n+8) {
+	--bg: 255, 133, 27;
+}
+.bars > div:nth-of-type(12n+9) {
+	--bg: 255, 65, 54;
+}
+.bars > div:nth-of-type(12n+10) {
+	--bg: 133, 20, 75;
+}
+.bars > div:nth-of-type(12n+11) {
+	--bg: 240, 18, 190;
+}
+.bars > div:nth-of-type(12n+12) {
+	--bg: 177, 13, 201;
+}
+
+
+.bars > div {
+	width: var(--w);
+	background-color: rgba(var(--bg), 0.5);
+	color: white;
+	text-align: center;
+	position:relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	transition: all 500ms ease-in-out;
+
+
+}
+.bars > div .pts {
+	overflow-x: hidden;
+	font-size: 0.75em;
+	white-space: nowrap;
+	width: 0;
+	height: 0;
+	text-align: center;
+	transform: scale(0.1);
+	transition: all 500ms ease-in-out;
+}
+.bars > div:hover {
+	width: 200px;
+	height: 80px;
+	overflow-y: visible;
+	overflow-x: hidden;
+}
+.bars > div:hover .pts {
+	display: block;
+	width: 100%;
+	height: auto;
+	transform: scale(1);
+
+}
+.bars > div .goldbar {
+	position: absolute;
+	bottom: 0;
+	height: 5px;
+	left: 0;
+	background: rgba(255,215,0,0.7);
+	width: var(--gw);
+}
+
+.bars > div .time {
+	font-size: 0.75rem;
+}
+
+#prettycomparisons, #prettycomparisons > div {
+	width: 100%;
+}
