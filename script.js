@@ -229,17 +229,19 @@ function uploadFile(file) {
 		})
 
 		let comptotal = pbattempt[timingmethod].totalmilliseconds
-
+		let savingtotal = pbattempt[timingmethod].sub(goldtotal)
 		document.querySelector("#prettycomparisons").insertAdjacentHTML('beforeend', `
 			<div>
 				<div class="bars">
 				${ pbsplits.map( (split, index) => {
+					let timesave = new Duration( split - sobsplits[index] )
 					return `
-						<div style="--w: ${ ( split / comptotal) *100 }%">
+						<div style="--w: ${ ( split / comptotal) *100 }%; --tsw: ${ ( timesave.totalmilliseconds / savingtotal.totalmilliseconds ) * 100}%">
 							<div class="goldbar" style="--gw: ${ ( sobsplits[index] / split ) *100 }%"></div>
 							<span class="split">${ lss.splits[index].name.replace(/(\w)[\w]+[\s]?/g, '$1').replace(/-/g, '').replace(/{.*}/g, '') }</span>
 							<span class="time">${ new Duration( split ).plainshortformat() }</span>
-							<span class="pts"><abbr title="Potential time save">Can save</abbr>: ${new Duration( split - sobsplits[index] ).humanformat()}</span>
+							<span class="timesave">${timesave.humanformat() }</span>
+							<span class="pts"><abbr title="Potential time save">Can save</abbr>: ${timesave.humanformat()}</span>
 						</div>
 					`
 				} ).join("") }
