@@ -456,7 +456,9 @@ div .bars > div span.split {
 }
 
 #byresets:checked ~ div .bars > div .resets,
-#byresetswo1:checked ~ div .bars > div .resets {
+#byresetswo1:checked ~ div .bars > div .resets,
+#byresets:checked ~ div .bars > div:hover .resetpc,
+#byresetswo1:checked ~ div .bars > div:hover .resetpcex1 {
 	display: block;
 }
 
