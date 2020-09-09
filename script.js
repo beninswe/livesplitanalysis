@@ -236,11 +236,16 @@ function uploadFile(file) {
 				${ pbsplits.map( (split, index) => {
 					let timesave = new Duration( split - sobsplits[index] )
 					return `
-						<div style="--w: ${ ( split / comptotal) *100 }%; --tsw: ${ ( timesave.totalmilliseconds / savingtotal.totalmilliseconds ) * 100}%">
+						<div style="--w: ${ ( split / comptotal) *100 }%; --tsw: ${ ( timesave.totalmilliseconds / savingtotal.totalmilliseconds ) * 100}%; --rsw: ${ ( lss.splits[index].resets / lss.attempts.length ) * 100 }%; --rswo: ${ ( (index == 0 ? 0 : lss.splits[index].resets ) / (lss.attempts.length - lss.splits[0].resets) ) *100 }%">
 							<div class="goldbar" style="--gw: ${ ( sobsplits[index] / split ) *100 }%"></div>
 							<span class="split">${ lss.splits[index].name.replace(/(\w)[\w]+[\s]?/g, '$1').replace(/-/g, '').replace(/{.*}/g, '') }</span>
 							<span class="time">${ new Duration( split ).plainshortformat() }</span>
 							<span class="timesave">${timesave.humanformat() }</span>
+							<span class="resets">${ lss.splits[index].resets }
+								<span class="resetpc">(${ ( ( lss.splits[index].resets / lss.attempts.length ) * 100).toFixed(2) }%)</span>
+								<span class="resetpcex1">(${ (( (index == 0 ? 0 : lss.splits[index].resets ) / (lss.attempts.length - lss.splits[0].resets) ) *100).toFixed(2) }%)</span>
+
+							</span>
 							<span class="pts"><abbr title="Potential time save">Can save</abbr>: ${timesave.humanformat()}</span>
 						</div>
 					`

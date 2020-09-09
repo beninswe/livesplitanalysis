@@ -382,7 +382,7 @@ input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
 	justify-content: center;
 	align-items: center;
 	transition: all 500ms ease-in-out;
-
+	flex-grow: 1;
 
 }
 
@@ -402,15 +402,10 @@ input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
 	overflow-y: visible;
 	overflow-x: hidden;
 }
-.bars > div:hover .pts {
-	display: block;
-	width: 100%;
-	height: auto;
-	transform: scale(1);
 
-}
 .bars > div .goldbar {
 	position: absolute;
+	display: none;
 	bottom: 0;
 	height: 5px;
 	left: 0;
@@ -418,7 +413,7 @@ input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
 	width: var(--gw);
 }
 
-.bars > div .time, .bars > div .timesave {
+.bars > div .time, .bars > div .timesave, .bars > div .resets {
 	font-size: 0.75rem;
 	white-space: nowrap;
 }
@@ -428,6 +423,31 @@ input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
 }
 
 
+div .bars > div span {
+	display: none;
+}
+
+div .bars > div span.split {
+	display: block;
+}
+
+#timespent:checked ~ div .bars > div .time,
+#timespent:checked ~ div .bars > div .goldbar,
+#timespent:checked ~ div .bars > div .pts {
+	display: block;
+}
+
+#timespent:checked ~ div .bars > div:hover .pts {
+	display: block;
+	width: 100%;
+	height: auto;
+	transform: scale(1);
+}
+
+#possibletimesave:checked ~ div .bars > div .timesave {
+	display: block;
+}
+
 #possibletimesave:checked ~ div .bars > div {
 	width: var(--tsw);
 }
@@ -435,10 +455,29 @@ input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
 	width: max(200px, var(--tsw));
 }
 
-#possibletimesave:checked ~ div .bars > div .time, #possibletimesave:checked ~ div .bars > div .goldbar, #possibletimesave:checked ~ div .bars > div .pts, div .bars > div .timesave {
-	display: none;
+#byresets:checked ~ div .bars > div .resets,
+#byresetswo1:checked ~ div .bars > div .resets {
+	display: block;
 }
 
-#possibletimesave:checked ~ div .bars > div .timesave {
-	display: block;
+#byresets:checked ~ div .bars > div {
+	min-width: 10px;
+	width: var(--rsw);
+}
+#byresets:checked ~ div .bars > div:hover {
+	width: max(200px, var(--rsw));
+}
+
+#byresetswo1:checked ~ div .bars > div {
+	min-width: 10px;
+	width: var(--rswo);
+}
+
+#byresetswo1:checked ~ div .bars > div:first-child {
+	width: 0;
+	min-width: 0;
+	flex-grow: 0;
+}
+#byresetswo1:checked ~ div .bars > div:hover {
+	width: max(200px, var(--rswo));
 }
