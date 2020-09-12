@@ -1,7 +1,7 @@
 import Duration from './duration.js'
 
 export class BaseArray extends Array {
-	#idmapping = {}
+	_idmapping = {}
 	first() {
 		return this[0]
 	}
@@ -12,15 +12,15 @@ export class BaseArray extends Array {
 		return this[this.indexOf(item)-1]
 	}
 	find ( id ) {
-		if ( !this.#idmapping.hasOwnProperty(id) ) {
+		if ( !this._idmapping.hasOwnProperty(id) ) {
 			let idcheck = this.filter( (a) => {
 				return a.id == id
 			} )[0]
 			if ( idcheck ) {
-				this.#idmapping[id] = idcheck
+				this._idmapping[id] = idcheck
 			}
 		}
-		return this.#idmapping[id]
+		return this._idmapping[id]
 	}
 }
 
@@ -98,30 +98,30 @@ export class Segment {
 export class Split {
 	segment
 
-	#time // split time not segmenttime
-	#segmenttime
+	_time // split time not segmenttime
+	_segmenttime
 
 	constructor( segment, time, starttime ) {
 		this.segment = segment
 		if ( time ) {
-			this.#time = new Duration( time )
+			this._time = new Duration( time )
 		}
 
 		if ( starttime ) {
-			this.#segmenttime = time.sub( starttime )
+			this._segmenttime = time.sub( starttime )
 		}
 	}
 	get time() {
-		return this.#time
+		return this._time
 	}
 	set time(v) {
-		this.#time = v
+		this._time = v
 	}
 	get segmenttime() {
-		return this.#segmenttime
+		return this._segmenttime
 	}
 	set segmenttime(v) {
-		this.#segmenttime = v
+		this._segmenttime = v
 	}
 }
 
@@ -216,12 +216,12 @@ export class Attempt {
 	pbimprovement // duration of time over previous pb
 	started // what date/time did this attempt start
 	ended // what date/time did this attempt end
-	#time
+	_time
 	arbitrary
 	diedat
 	lastpb
 	lastcompletedrun
-	#totalsplitduration
+	_totalsplitduration
 	constructor( id, time ) {
 		this.id = id
 		if ( time ) {
@@ -235,13 +235,13 @@ export class Attempt {
 			this.splits = new SplitArray( this.defaultsegments )
 		}
 		this.diedat = this.splits[0].segment
-		this.#totalsplitduration = undefined
+		this._totalsplitduration = undefined
 	}
 	get time() {
-		return this.#time
+		return this._time
 	}
 	set time(v) {
-		this.#time = v
+		this._time = v
 	}
 
 	updateSegmentSplit( segment, splittime, splitstarttime ) {
@@ -265,7 +265,7 @@ export class Attempt {
 			split.segmenttime = split.time.sub( splitstarttime )
 		}
 		this.verifySplit( split )
-		this.#totalsplitduration = undefined
+		this._totalsplitduration = undefined
 	}
 
 	updateSegmentTime( segment, segmenttime ) {
@@ -325,15 +325,15 @@ export class Attempt {
 	}
 
 	get totalsplitduration() {
-		if ( !this.#totalsplitduration ) {
-			this.#totalsplitduration = this.splits.reduce( (a, s) => {
+		if ( !this._totalsplitduration ) {
+			this._totalsplitduration = this.splits.reduce( (a, s) => {
 				if ( s?.segmenttime instanceof Duration ) {
 					return s.segmenttime.add(a)
 				}
 				return a
 			}, 0 )
 		}
-		return this.#totalsplitduration
+		return this._totalsplitduration
 	}
 	get runduration() {
 		return this.time || this.splits.last().time

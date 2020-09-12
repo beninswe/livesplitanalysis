@@ -37,8 +37,8 @@ export default class SplitsFile {
 			}
 
 		}
-		this.#processSegmentsInfo()
-		this.#processAttempts()
+		this._processSegmentsInfo()
+		this._processAttempts()
 
 		this.average = new AverageAttempt()
 
@@ -47,7 +47,7 @@ export default class SplitsFile {
 		finishedcallback(this )
 	}
 
-	#processSegmentsInfo() {
+	_processSegmentsInfo() {
 		let currentsubsplitstart = 0
 		let currentSegment = { completions: this.attemptcount }
 		Attempt.prototype.defaultsegments = this.segments = new SegmentArray(
@@ -94,7 +94,7 @@ export default class SplitsFile {
 
 	}
 
-	#processAttempts() {
+	_processAttempts() {
 		let domAttempts = [ ...this.lssDoc.querySelectorAll( "AttemptHistory Attempt" ) ]
 		domAttempts.forEach( ( att ) => {
 			let attemptid = att.getAttribute( 'id' )
@@ -103,8 +103,8 @@ export default class SplitsFile {
 			thisAttempt.lastpb = this.allpbs.last()
 			thisAttempt.lastcompletedrun = this.allcompletions.last()
 			this.allattempts.push( thisAttempt )
-			thisAttempt.started = this.#formatDate( att.getAttribute( 'started' ) )
-			thisAttempt.ended = this.#formatDate( att.getAttribute( 'ended' ) )
+			thisAttempt.started = this._formatDate( att.getAttribute( 'started' ) )
+			thisAttempt.ended = this._formatDate( att.getAttribute( 'ended' ) )
 			;[ ...this.lssDoc.querySelectorAll( "SegmentHistory Time[id='" + attemptid +"']" ) ].forEach( ( time ) => {
 				let segmenttime = time.querySelector( this.timingmethod )?.textContent
 				if ( !segmenttime ) {
@@ -139,7 +139,7 @@ export default class SplitsFile {
 		} )
 	}
 
-	#formatDate( lssdate ) {
+	_formatDate( lssdate ) {
 		let [mon,day,year,hour,minute,second] = lssdate.split(/[\/: ]/)
 		return (year + "-" + mon + "-" + day + " " + hour + ":" + minute)
 	}

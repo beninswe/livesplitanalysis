@@ -60,7 +60,7 @@ export default class Duration {
 			ret = this.getFormattedHour() + ':' + ret
 		}
 		if ( gold ) {
-			gold = this.#verify( gold )
+			gold = this._verify( gold )
 			if ( this.eq( gold ) ) {
 				extra = `class="gold"`
 			}
@@ -115,18 +115,18 @@ export default class Duration {
 	asMilliseconds() {
 		return this.totalmilliseconds
 	}
-	#verify( other ) {
+	_verify( other ) {
 		if ( !(other instanceof Duration) ) {
 			return new Duration(other)
 		}
 		return other
 	}
 	sub( other ) {
-		other = this.#verify( other )
+		other = this._verify( other )
 		return new Duration( this.totalmilliseconds - other.totalmilliseconds )
 	}
 	add( other ) {
-		other = this.#verify( other )
+		other = this._verify( other )
 		return new Duration( this.totalmilliseconds + other.totalmilliseconds )
 	}
 	avg ( count ) {
@@ -134,34 +134,34 @@ export default class Duration {
 	}
 
 	gt ( other ) {
-		other = this.#verify( other )
+		other = this._verify( other )
 		return this.totalmilliseconds > other.totalmilliseconds
 	}
 	gte ( other ) {
-		other = this.#verify( other )
+		other = this._verify( other )
 		return this.totalmilliseconds >= other.totalmilliseconds
 	}
 	lt ( other ) {
-		other = this.#verify( other )
+		other = this._verify( other )
 		return this.totalmilliseconds < other.totalmilliseconds
 	}
 	lte ( other ) {
-		other = this.#verify( other )
+		other = this._verify( other )
 		return this.totalmilliseconds <= other.totalmilliseconds
 	}
 	eq ( other ) {
-		other = this.#verify( other )
+		other = this._verify( other )
 		return this.totalmilliseconds == other.totalmilliseconds
 	}
 	max ( other ) {
-		other = this.#verify( other )
+		other = this._verify( other )
 		if ( this.totalmilliseconds >= other.totalmilliseconds ) {
 			return this
 		}
 		return other
 	}
 	min ( other ) {
-		other = this.#verify( other )
+		other = this._verify( other )
 		if ( this.totalmilliseconds <= other.totalmilliseconds ) {
 			return this
 		}
