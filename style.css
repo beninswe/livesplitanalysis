@@ -78,6 +78,7 @@ body {
 
 #splits {
 	width: 100%;
+	margin-top: 1rem;
 
 }
 .table tr:nth-child(even) {
@@ -159,6 +160,7 @@ body {
 	font-weight: bold;
 	font-size: 0.875rem;
 	flex-grow: 1;
+	flex-basis: 50%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -494,4 +496,79 @@ div .bars > div span.split {
 	line-height: 50px;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+.modalviewerwrapper {
+	position: fixed;
+	z-index: 300;
+	background: rgba(0,0,0,.10);
+	backdrop-filter: blur(8px);
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding: 3rem;
+	bottom: 0;
+}
+
+#modalviewer {
+	border: 1px solid #d4d4d4;
+	border-radius: 5px;
+	background: #1E1E1E;
+	position: relative;
+	margin-top: 1rem;
+	padding: 1rem;
+	height: calc( 100vh - 6rem);
+	overflow-y: auto;
+	font-size: 0.95rem;
+}
+.modalcloser {
+	position: absolute;
+	right: 5px;
+	top: 5px;
+	cursor: pointer;
+
+}
+
+.modalviewerwrapper.hidden {
+	display: none;
+}
+
+a {
+	color: whitesmoke;
+
+}
+
+.ct-label {
+	color: rgba(255,255,255,0.4);
+	fill:  rgba(255,255,255,0.4);
+}
+.ct-grid {
+	stroke: rgba(255,255,255,0.2);
+}
+
+.ct-series-b .ct-line,
+.ct-series-b .ct-point {
+  stroke:rgba(0,150,0,0.75);
+}
+
+.attemptspanel {
+	flex-direction: row;
+	justify-content: space-between;
+	gap: 10px;
+}
+.attemptspanel > div {
+	flex-grow: 1;
+	flex-basis: calc(50% - 5px);
+
+}
+.ct-axis-title {
+	fill: rgba(255,255,255,0.5);
+	/*stroke: rgba(255,255,255,0.35);*/
+}
+
+#segmentchart {
+	width: 75vw;
 }

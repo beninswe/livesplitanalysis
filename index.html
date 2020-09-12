@@ -3,10 +3,11 @@
 	<head>
 		<link rel="stylesheet"
 			href="https://fonts.googleapis.com/css?family=Lato">
-		<link rel="stylesheet" href="style.css">
-		<title>LiveSplit Analysis</title>
 
+		<title>LiveSplit Analysis</title>
 		<script type="module" src="script.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.css" integrity="sha512-V0+DPzYyLzIiMiWCg3nNdY+NyIiK9bED/T1xNBj08CaIUyK3sXRpB26OUCIzujMevxY9TRJFHQIxTwgzb0jVLg==" crossorigin="anonymous" />
+		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
 		<div id="drop-areaholder">
@@ -72,11 +73,19 @@
 				<input name="tabs" id="tab-splits" class="input" type="radio" hidden href="tab-splits" checked="checked">
 				<input name="tabs" id="tab-pbhistory" class="input" type="radio" hidden href="tab-pbhistory">
 				<label class="label" for="tab-splits">Splits</label>
-				<label class="label" for="tab-pbhistory">Attempt History</label>
+				<label class="label attemptstab" for="tab-pbhistory">Attempt History</label>
 				<div class="panel">
+					<h2>At a glance</h2>
+					<div id="prettycomparisons">
+						<input type="radio" name="timecomp" id="timespent" checked="checked"><label for="timespent">Time spent</label>
+						<input type="radio" name="timecomp" id="possibletimesave"><label for="possibletimesave">Possible time save</label>
+						<input type="radio" name="timecomp" id="byresets"><label for="byresets">Resets</label>
+						<input type="radio" name="timecomp" id="byresetswo1"><label for="byresetswo1">Resets (w/o 1st split)</label>
+					</div>
+
 					<table id="splits" class="table">
 						<tr>
-							<th colspan="5"></th>
+							<th colspan="5" style="text-align: left;"><h2>Details</h2></th>
 							<th colspan="20" class="gold-l">Comparisons</th>
 						</tr>
 						<tr>
@@ -131,17 +140,12 @@
 
 						</tbody>
 					</table>
-					<div id="prettycomparisons">
-						<input type="radio" name="timecomp" id="timespent" checked="checked"><label for="timespent">Time spent</label>
-						<input type="radio" name="timecomp" id="possibletimesave"><label for="possibletimesave">Possible time save</label>
-						<input type="radio" name="timecomp" id="byresets"><label for="byresets">Resets</label>
-						<input type="radio" name="timecomp" id="byresetswo1"><label for="byresetswo1">Resets (w/o 1st split)</label>
-					</div>
+
 					<div style="height: 100px">
 					</div>
 				</div>
 
-				<div class="panel">
+				<div class="panel attemptspanel">
 					<div class="history">
 
 						<input type="radio" name="runtype" id="pbonly" checked="checked"><label for="pbonly">PBs Only</label><input type="radio" name="runtype" id="completedonly"><label for="completedonly">Completed Runs Only</label><input type="radio" name="runtype" id="allruns"><label for="allruns">All Runs</label><br>
@@ -157,10 +161,23 @@
 							</tbody>
 						</table>
 					</div>
+
+					<div class="charts">
+						<h3>Run Duration over time</h3>
+						<div id="rundurationchart" class="ct-chart ct-perfect-fourth"></div>
+					</div>
 				</div>
 			</div>
 
 		</div>
-
+		<div class="modalviewerwrapper hidden">
+			<div id="modalviewer">
+				<div class="modaltitle"></div>
+				<div class="modalcloser">X</div>
+				<div class="modalcontent"></div>
+			</div>
+		</div>
 	</body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.js" integrity="sha512-9rxMbTkN9JcgG5euudGbdIbhFZ7KGyAuVomdQDI9qXfPply9BJh0iqA7E/moLCatH2JD4xBGHwV6ezBkCpnjRQ==" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartist-plugin-axistitle@0.0.7/dist/chartist-plugin-axistitle.min.js" integrity="sha256-prApUlf6GL5TScu+1fzXL6UDmTFLl9v2Bsk57h4zlK8=" crossorigin="anonymous"></script>
 </html>

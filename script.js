@@ -1,6 +1,7 @@
 import SplitsFile from './splitsfile.js'
 
 import {  AttemptComparison } from './splitclasses.js'
+import Duration from './duration.js';
 
 let dropArea = document.getElementById('drop-area')
 ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -82,7 +83,7 @@ function uploadFile(file) {
 
 				})
 
-				lss.segments.forEach( (seg) => {
+				lss.segments.forEach( (seg, index) => {
 					let segaverage = lss.average.splits.findBySegment(seg)
 					let seginpb = lss.pb.splits.findBySegment(seg)
 					let seginsob = lss.sob.splits.findBySegment(seg)
@@ -95,7 +96,7 @@ function uploadFile(file) {
 						<tr>
 							<td class="splitname">
 								${seg.icon.image ? seg.icon.image.outerHTML : '<i></i>'}
-								${seg.name}
+								<a href="" class="viewsegment" data-segmentindex="${index}">${seg.name}</a>
 							</td>
 							<td>
 								${seg.rundeaths}
@@ -158,7 +159,7 @@ function uploadFile(file) {
 								${seg.bestpace.time.format()}
 							</td>
 							<td>
-								${seg.bestpace.attempt.id}
+								<a href="" class="viewattempt" data-attemptid="${seg.bestpace.attempt.id}">${seg.bestpace.attempt.id}</a>
 							</td>
 
 						</tr>
@@ -187,7 +188,7 @@ function uploadFile(file) {
 					let attempthtml = `
 					<tr class="attempt ${ pbfound >= 0 ? 'pbrun ' + ( (pbfound %2 == 0 ) ? 'pbeven' : 'pbodd')  : '' } ${completedfound >= 0 ? 'completed ' + ( (completedfound %2 == 0 ) ? 'completedeven' : 'completedodd') : ''}">
 						<td class="rightalign">
-							${attempt.id}
+						<a href="" class="viewattempt" data-attemptid="${attempt.id}">${attempt.id}</a>
 						</td>
 						<td>${attempt.started}</td>
 					`
@@ -241,8 +242,178 @@ function uploadFile(file) {
 				`)
 
 				document.getElementById("results").classList.remove('hidden')
+
+				document.querySelector(".tabs").addEventListener("click", (e) => {
+
+					if ( e.target.classList.contains('viewattempt') ) {
+						let attempt = lss.allattempts.find( e.target.dataset.attemptid )
+						let wrapper = document.querySelector(".modalviewerwrapper")
+						if ( attempt ) {
+							wrapper.classList.remove('hidden')
+							wrapper.querySelector('.modaltitle').textContent = "Attempt #" + attempt.id
+
+							let splithtml = ''
+							attempt.splits.forEach( (s) => {
+								splithtml += `
+								<tr>
+									<td>${s.segment.name}</td>
+									<td>${s.time?.format() || '-'}</td>
+									<td>${attempt.lastpb?.splits.findBySegment(s.segment).time?.format() || '-' }</td>
+									<td>${pbattempt.splits.findBySegment(s.segment).time?.format() || '-' }</td>
+								</tr>
+								`
+							} )
+							wrapper.querySelector('.modalcontent').innerHTML = `
+								<table class="table">
+									<tr>
+										<th>Split</th>
+										<th>Time</th>
+										<th>PB then</th>
+										<th>PB now</th>
+									</tr>
+									${splithtml}
+								</table>
+							`
+						}
+
+						e.preventDefault()
+					} else if ( e.target.classList.contains('attemptstab') ) {
+						var data = {
+							labels: lss.allattempts.map((a) => {
+								return a.id
+							}),
+							series: [
+								lss.allattempts.map((a) => {
+									return a.runduration?.totalmilliseconds
+								}),
+								lss.allattempts.map((a) => {
+									return a.pb ? a.runduration.totalmilliseconds : null
+								})
+							]
+						};
+						var options = {
+							lineSmooth: Chartist.Interpolation.cardinal({
+								fillHoles: true,
+							}),
+
+							axisX: {
+								labelInterpolationFnc: function(value, index) {
+									return index % Math.round(lss.allattempts.length/12) === 0 ? value : null;
+								}
+							},
+							axisY: {
+								scaleMinSpace: 20,
+								labelInterpolationFnc: function(value) {
+									return new Duration(value).plainshortformat()
+								}
+							},
+							chartPadding: 30,
+							plugins: [
+								Chartist.plugins.ctAxisTitle({
+									axisX: {
+										axisTitle: "Attempt #",
+										axisClass: "ct-axis-title",
+										offset: {
+											x: 0,
+											y: 50
+										},
+										textAnchor: "middle"
+									},
+									axisY: {
+										axisTitle: "Time",
+										axisClass: "ct-axis-title",
+										offset: {
+											x: 0,
+											y: 0
+										},
+										flipTitle: false
+									}
+								})
+							]
+						}
+						new Chartist.Line('#rundurationchart', data, options);
+					} else if ( e.target.classList.contains('viewsegment') ) {
+						let segment = lss.segments[ e.target.dataset.segmentindex ]
+						let wrapper = document.querySelector(".modalviewerwrapper")
+						if ( segment ) {
+							wrapper.classList.remove('hidden')
+							wrapper.querySelector('.modaltitle').textContent = segment.name
+							wrapper.querySelector('.modalcontent').innerHTML = `
+							<div id="segmentchart" class="ct-chart ct-perfect-fourth"></div>
+							`
+
+
+							var data = {
+								labels: lss.allattempts.map((a) => {
+									return a.id
+								}),
+								series: [
+									lss.allattempts.map((a) => {
+										return a.splits.findBySegment(segment)?.segmenttime?.totalmilliseconds
+									})
+								]
+							};
+							var options = {
+								lineSmooth: Chartist.Interpolation.cardinal({
+									fillHoles: true,
+								}),
+								low: Math.max(lss.allattempts.reduce((acc, a) => {
+									return acc.min(a.splits.findBySegment(segment)?.segmenttime || acc )
+								}, new Duration (1000*60*60*24)).sub(new Duration(1000*30)),0),
+								high: Math.max(
+									lss.allattempts.reduce((acc, a) => {
+										return acc.max(a.splits.findBySegment(segment)?.segmenttime || acc )
+									}, new Duration (0)).add(new Duration(1000*30)),0),
+								axisX: {
+									labelInterpolationFnc: function(value, index) {
+										return index % Math.round(lss.allattempts.length/12) === 0 ? value : null;
+									}
+								},
+								axisY: {
+									scaleMinSpace: 20,
+									labelInterpolationFnc: function(value) {
+										return new Duration(value).plainshortformat()
+									}
+								},
+								chartPadding: 30,
+								plugins: [
+									Chartist.plugins.ctAxisTitle({
+										axisX: {
+											axisTitle: "Attempt #",
+											axisClass: "ct-axis-title",
+											offset: {
+												x: 0,
+												y: 50
+											},
+											textAnchor: "middle"
+										},
+										axisY: {
+											axisTitle: "Time",
+											axisClass: "ct-axis-title",
+											offset: {
+												x: 0,
+												y: 0
+											},
+											flipTitle: false
+										}
+									})
+								]
+							}
+							new Chartist.Line('#segmentchart', data, options);
+
+						}
+
+						e.preventDefault()
+					}
+					e.stopPropagation()
+				}, false)
+
+
 			})
 		}, 100)
+		document.querySelector('.modalcloser').addEventListener('click', () => {
+			document.querySelector('.modalviewerwrapper').classList.add('hidden')
+		})
 	}
 	reader.readAsText(file)
 	console.log(file)
