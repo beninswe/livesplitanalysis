@@ -7,6 +7,9 @@ export default class Duration {
 	totalmilliseconds = 0
 	negative = false
 	constructor( time ) {
+		if ( time instanceof Duration ) {
+			return time
+		}
 		if ( isNaN(time) ) {
 			if ( !time.length ) {
 				time = 0
@@ -166,6 +169,9 @@ export default class Duration {
 	}
 	toString() {
 		return this.plainformat()
+	}
+	valueOf() {
+		return this.totalmilliseconds
 	}
 
 }

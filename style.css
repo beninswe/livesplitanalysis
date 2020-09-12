@@ -483,3 +483,15 @@ div .bars > div span.split {
 #byresetswo1:checked ~ div .bars > div:hover {
 	width: max(200px, var(--rswo));
 }
+
+
+#progressbar {
+	position: relative;
+	width: 50%;
+	color: white;
+	height: 50px;
+	text-align: center;
+	line-height: 50px;
+	margin-left: auto;
+	margin-right: auto;
+}

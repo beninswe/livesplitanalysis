@@ -1,268 +1,146 @@
 import Duration from './duration.js'
+
+import { Icon, SplitGroup, Segment, Split, Attempt, AttemptCollection, SegmentArray, AverageAttempt, AttemptComparison } from './splitclasses.js'
 export default class SplitsFile {
 	lssDoc
 	game
 	category
 	attemptcount
 	gameicon
-	othercomparisons = []
-	pbs = {
-		realtime: [],
-		gametime: []
-	}
-	completedruns = {
-		realtime: [],
-		gametime: []
-	}
-	#splits
-	#attempts
-	constructor( lss ) {
+	timingmethod
+	segments = []
+	subsplitgroups = []
+	pb
+	sob
+	comparisons = new AttemptCollection()
+	allattempts = new AttemptCollection()
+	allcompletions = new AttemptCollection()
+	allpbs = new AttemptCollection()
+	average
+	pbvsgold
+	constructor( lss, timingmethod, finishedcallback ) {
 		var parser = new DOMParser()
-		this.lssDoc = parser.parseFromString(lss ,"text/xml")
-		this.game = this.lssDoc.getElementsByTagName("GameName")[0].textContent
-		this.category = this.lssDoc.getElementsByTagName("CategoryName")[0].textContent
-		this.attemptcount = this.lssDoc.getElementsByTagName("AttemptCount")[0].textContent
+		this.lssDoc = parser.parseFromString( lss ,"text/xml" )
+		this.game = this.lssDoc.getElementsByTagName( "GameName" )[0].textContent
+		this.category = this.lssDoc.getElementsByTagName( "CategoryName" )[0].textContent
+		this.attemptcount = parseInt(this.lssDoc.getElementsByTagName( "AttemptCount" )[0].textContent, 10)
 
-		this.gameicon = this.#getImgFromIcon( this.lssDoc.getElementsByTagName("GameIcon")[0].textContent )
-		this.splits
-		this.attempts
+		this.gameicon = new Icon( this.lssDoc.getElementsByTagName( "GameIcon" )[0].textContent ).image
+		this.timingmethod = timingmethod
+
+		if ( this.timingmethod == 'auto' ) {
+			// if last completed run has a gametime assume gametime is used else realtime
+			if ( this.lssDoc.querySelector( "Segment:last-child SegmentHistory Time:last-child GameTime" ) ) {
+				this.timingmethod = 'GameTime'
+			} else {
+				this.timingmethod = 'RealTime'
+			}
+
+		}
+		this.#processSegmentsInfo()
+		this.#processAttempts()
+
+		this.average = new AverageAttempt()
+
+		this.pbvsgold = new AttemptComparison( this.pb, this.sob )
+		this.pbvsavg = new AttemptComparison( this.pb, this.average )
+		finishedcallback(this )
 	}
 
-	#getImgFromIcon( icondata ) {
-		var bindata = atob( icondata )
-		if ( bindata.length ) {
-			var img = bindata.substr(bindata.indexOf('PNG') -1)
-			var imag = new Image()
-			imag.src = "data:image/png;base64," + btoa(img)
-			imag.alt = this.game
-			return imag
-		}
-		return null
-	}
-	#formatDate( lssdate ) {
-		let [mon,day,year,hour,minute,second] = lssdate.split(/[\/: ]/)
-		return (year + "-" + mon + "-" + day + " " + hour + ":" + minute)
-	}
-
-	get splits() {
-		if ( this.#splits ) {
-			return this.#splits
-		}
-		var totalsofar = {
-			'realtime': new Duration(0),
-			'gametime': new Duration(0)
-		}
-		var runningtotalsplits = {}
-		this.#splits =  Array.from(this.lssDoc.querySelectorAll("Segment")).map( (a, index) => {
-			var splittimes = {}
-
-			Array.from(a.querySelectorAll("SplitTime")).forEach( b => {
-				var comparisonname = b.getAttribute("name")
-				if ( ! runningtotalsplits[ comparisonname ]) {
-					runningtotalsplits[ comparisonname ] = {
-						'realtime': new Duration(0),
-						'gametime': new Duration(0)
-					}
+	#processSegmentsInfo() {
+		let currentsubsplitstart = 0
+		let currentSegment = { completions: this.attemptcount }
+		Attempt.prototype.defaultsegments = this.segments = new SegmentArray(
+			[ ...this.lssDoc.querySelectorAll( "Segment" ) ].map( ( seg, index ) => {
+				let nameOfSegment = seg.querySelector( "Name" ).textContent
+				let icon = seg.querySelector( "Icon" ).textContent
+				if ( nameOfSegment.substr( 0, 1 ) == '{' ) {
+					let nameOfSubsplit = nameOfSegment.substring( 1, nameOfSegment.indexOf( '}' ) )
+					let subsplitgroup = new SplitGroup( nameOfSubsplit, currentsubsplitstart, index + 1, this.segments )
+					currentsubsplitstart = index + 1
+					this.subsplitgroups.push( subsplitgroup )
 				}
-				var rtforsplit = b.querySelector("RealTime") ? new Duration(b.querySelector("RealTime").textContent) : false;
-				var gtforsplit = b.querySelector("GameTime") ? new Duration(b.querySelector("GameTime").textContent) : false
-				splittimes[comparisonname] = {
-					'realtime': rtforsplit,
-					'gametime': gtforsplit,
-					'segmentrealtime': rtforsplit ? rtforsplit.sub( runningtotalsplits[ comparisonname ].realtime ) : false,
-					'segmentgametime': gtforsplit ? gtforsplit.sub( runningtotalsplits[ comparisonname ].gametime ) : false
-
-				}
-				runningtotalsplits[ comparisonname ] = splittimes[comparisonname]
-				if ( comparisonname != "Personal Best" && this.othercomparisons.indexOf( comparisonname ) == -1  ) {
-					this.othercomparisons.push( comparisonname )
-				}
+				return currentSegment = new Segment( index, nameOfSegment, icon, currentSegment )
 			})
-			var allsplits = Array.from(a.querySelectorAll('SegmentHistory Time')).map( c => {
-				return {
-					'attempt': c.getAttribute('id'),
-					'realtime':  c.querySelector("RealTime") ? new Duration(c.querySelector("RealTime").textContent) : false,
-					'gametime': c.querySelector("GameTime") ? new Duration( c.querySelector("GameTime").textContent) : false
-				}
-			})
-			var average = allsplits.reduce( (acc, split) => {
-				['realtime', 'gametime'].forEach( time => {
-					if ( split[time] ) {
-						acc[time].count++
-						acc[time].total = acc[time].total.add(split[time])
-					}
-				} )
-				return acc
+		)
 
-			}, {
-				'realtime': {
-					count: 0,
-					total: new Duration(0)
-				},
-				'gametime': {
-					count: 0,
-					total: new Duration(0)
+		let sobcounter = new Duration(0)
+
+		this.pb = new Attempt( "PB" )
+		this.sob = new Attempt( "SoB" )
+
+		this.segments.forEach( ( segment, index ) => {
+			let seg = this.lssDoc.querySelectorAll( "Segment" )[index]
+			;[ ...seg.querySelectorAll( "SplitTime" ) ].forEach( ( comparison ) => {
+				let splitname = comparison.getAttribute('name')
+				let splittime = comparison.querySelector( this.timingmethod ).textContent
+				if ( splitname == 'Personal Best') {
+					this.pb.updateSegmentSplit( segment, splittime )
+				} else {
+					let othercomp = this.comparisons.find( splitname )
+					if ( !othercomp ) {
+						othercomp = new Attempt( splitname )
+						this.comparisons.push( othercomp )
+					}
+					othercomp.updateSegmentSplit( segment, splittime )
 				}
 			} )
 
-			for ( const time of ['realtime', 'gametime'] ) {
-				average[time].average = average[time].total.avg( average[time].count)
-			}
-			var pbsegment = {
-				'realtime': splittimes["Personal Best"].realtime ? splittimes["Personal Best"].realtime.sub( totalsofar.realtime ) : false,
-				'gametime': splittimes["Personal Best"].gametime ? splittimes["Personal Best"].gametime.sub( totalsofar.gametime ) : false
+			let sobsegment = seg.querySelector( "BestSegmentTime " + this.timingmethod ).textContent
+			let sobsplittime = sobcounter.add( sobsegment )
+			this.sob.updateSegmentSplit( segment, sobsplittime, sobcounter )
+			sobcounter = sobsplittime
+		} )
 
-			}
-			totalsofar = splittimes["Personal Best"]
-			return {
-				"name": a.querySelector("Name").textContent,
-				"pb": splittimes["Personal Best"],
-				"pbsegment": pbsegment,
-				"splittimes": splittimes,
-				"resets": 0,
-				"icon": this.#getImgFromIcon( a.querySelector("Icon").textContent ),
-				"gold": {
-					'realtime': a.querySelector("BestSegmentTime RealTime") ? new Duration(a.querySelector("BestSegmentTime RealTime").textContent) : false,
-					'gametime': a.querySelector("BestSegmentTime GameTime") ? new Duration(a.querySelector("BestSegmentTime GameTime").textContent) : false
-				},
-				"bestpace": {
-					'realtime': false,
-					'gametime': false,
-					'attemptid': 0
-				},
-				"average": average,
-				"allsplits": allsplits
-			}
-		})
-		return this.#splits
 	}
 
-	get attempts() {
-		if ( this.#attempts ) {
-			return this.#attempts
-		}
-		console.log("thinking")
-		var lastpb = {
-			'realtime': null,
-			'gametime': null
-		}
-
-		this.#attempts = Array.from(this.lssDoc.querySelectorAll("AttemptHistory Attempt")).map( (a, index) => {
-			var id = a.getAttribute('id')
-			var realtime = a.querySelector("RealTime") ? new Duration(a.querySelector("RealTime").textContent ) : null
-			var gametime = a.querySelector("GameTime") ? new Duration(a.querySelector("GameTime").textContent ) : null
-
-			var wasrtpb = false
-			var wasgtpb = false
-			var rtpbimprovement = false
-			var gtpbimprovement = false
-
-			var diedat = null
-			var diedatindex = null
-
-
-			var alltimes = Array.from(this.lssDoc.querySelectorAll("SegmentHistory Time[id='" + id +"']"))
-			var attemptduration = {
-				realtime: new Duration(0),
-				gametime: new Duration(0)
-			}
-			var previoussegment = -1;
-			alltimes.some( (time) => {
-				var segment = time.parentNode.parentNode
-				var segmentindex = Array.from(segment.parentNode.children).indexOf(segment)
-				// check for continuity of splits, if we don't have it then we can't reliably calculate Best Pace
-				if ( segmentindex != previoussegment +1 ) {
-					attemptduration = {
-						realtime: false,
-						gametime: false
-					}
-					return true;
+	#processAttempts() {
+		let domAttempts = [ ...this.lssDoc.querySelectorAll( "AttemptHistory Attempt" ) ]
+		domAttempts.forEach( ( att ) => {
+			let attemptid = att.getAttribute( 'id' )
+			let attempttime = att.querySelector( this.timingmethod )?.textContent
+			let thisAttempt = new Attempt( attemptid, attempttime )
+			thisAttempt.lastpb = this.allpbs.last()
+			thisAttempt.lastcompletedrun = this.allcompletions.last()
+			this.allattempts.push( thisAttempt )
+			thisAttempt.started = this.#formatDate( att.getAttribute( 'started' ) )
+			thisAttempt.ended = this.#formatDate( att.getAttribute( 'ended' ) )
+			;[ ...this.lssDoc.querySelectorAll( "SegmentHistory Time[id='" + attemptid +"']" ) ].forEach( ( time ) => {
+				let segmenttime = time.querySelector( this.timingmethod )?.textContent
+				if ( !segmenttime ) {
+					return
 				}
-				previoussegment = segmentindex
-				if ( time.querySelector("RealTime")?.textContent ) {
-					attemptduration.realtime = attemptduration.realtime.add( time.querySelector("RealTime").textContent )
-					if ( !this.splits[segmentindex].bestpace.realtime || attemptduration.realtime.lt( this.splits[segmentindex].bestpace.realtime )  ) {
-						this.splits[segmentindex].bestpace.realtime = attemptduration.realtime
-						this.splits[segmentindex].bestpace.attemptid = id
-					}
+				let segmentxml = time.parentNode.parentNode
+				let segmentname = segmentxml.querySelector( "Name" ).textContent
+
+				let segmentindex = Array.from( segmentxml.parentNode.children ).indexOf( segmentxml )
+
+				let segment = this.segments[ segmentindex ]
+				if ( !segment.originalname == segmentname ) {
+					segment = this.segments.find( segmentname )
 				}
-				if ( time.querySelector("GameTime")?.textContent ) {
-					attemptduration.gametime = attemptduration.gametime.add( time.querySelector("GameTime").textContent )
-					if ( !this.splits[segmentindex].bestpace.gametime || attemptduration.gametime.lt( this.splits[segmentindex].bestpace.gametime ) ) {
-						this.splits[segmentindex].bestpace.gametime = attemptduration.gametime
-					}
-				}
+				thisAttempt.updateSegmentTime( segment, segmenttime )
+
 			})
-
-			var completed = {
-				realtime: !!realtime && realtime.gte(attemptduration.realtime),
-				gametime: !!gametime && gametime.gte(attemptduration.gametime)
-			}
-
-			if ( completed.realtime ) {
-				if ( !lastpb.realtime || realtime.lt( lastpb.realtime ) ) {
-					if ( lastpb.realtime ) {
-						rtpbimprovement = realtime.sub(lastpb.realtime)
+			if ( !thisAttempt.completed ) {
+				thisAttempt.diedat.rundeaths++
+			} else {
+				if ( thisAttempt.runduration.gte( thisAttempt.totalsplitduration )) {
+					this.allcompletions.push( thisAttempt )
+					if ( !this.allpbs.last() || this.allpbs.last().runduration.gt( thisAttempt.runduration ) ) {
+						thisAttempt.pb = true
+						this.allpbs.push( thisAttempt )
 					}
-					lastpb.realtime = realtime
-					wasrtpb = true
-
-				}
-			}
-			if ( completed.gametime ) {
-				if ( !lastpb.gametime || gametime.lt( lastpb.gametime ) ) {
-					if ( lastpb.gametime ) {
-						gtpbimprovement = gametime.sub(lastpb.gametime)
-					}
-					lastpb.gametime = gametime
-					wasgtpb = true
-
-				}
-			}
-
-			if ( !completed.realtime && !completed.gametime ) {
-				var indexofSplit = 0
-				if ( alltimes.length ) {
-					var segment = alltimes[alltimes.length - 1].parentNode.parentNode
-					indexofSplit = Array.from(segment.parentNode.children).indexOf(segment) + 1
-
-				}
-				if ( this.splits[indexofSplit] ) {
-					diedat = this.splits[indexofSplit].name
-					this.splits[indexofSplit].resets++
-					diedatindex = indexofSplit
 				} else {
-					diedat = "Unknown - Nonsensical splits?"
+					thisAttempt.diedat = { name: 'Unknown - Nonsensical splits?' }
+					thisAttempt.completed = false
 				}
 			}
+		} )
+	}
 
-			if ( wasrtpb ) {
-				this.pbs.realtime.push( id )
-			}
-			if ( wasgtpb ) {
-				this.pbs.gametime.push( id )
-			}
-			if ( completed.realtime ) {
-				this.completedruns.realtime.push( id )
-			}
-			if ( completed.gametime ) {
-				this.completedruns.gametime.push( id )
-			}
-			return {
-				id: id,
-				started: this.#formatDate(a.getAttribute('started')),
-				ended: this.#formatDate(a.getAttribute('ended')),
-				realtime: realtime,
-				gametime: gametime,
-				rtpbimprovement: rtpbimprovement,
-				gtpbimprovement: gtpbimprovement,
-				wasrtpb: wasrtpb,
-				wasgtpb: wasgtpb,
-				completed: completed,
-				diedat: diedat,
-				diedatindex: diedatindex
-			}
-		})
-		return this.#attempts
+	#formatDate( lssdate ) {
+		let [mon,day,year,hour,minute,second] = lssdate.split(/[\/: ]/)
+		return (year + "-" + mon + "-" + day + " " + hour + ":" + minute)
 	}
 }

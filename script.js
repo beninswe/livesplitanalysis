@@ -1,5 +1,6 @@
-import Duration from './duration.js'
 import SplitsFile from './splitsfile.js'
+
+import {  AttemptComparison } from './splitclasses.js'
 
 let dropArea = document.getElementById('drop-area')
 ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -34,226 +35,214 @@ function handleFiles(files) {
 window.handleFiles = handleFiles
 
 function uploadFile(file) {
+	let progressbar = document.getElementById("progressbar")
+	let statusbar = progressbar.querySelector('.status')
+	progressbar.classList.remove('hidden')
 	var reader = new FileReader();
-	reader.onload = (e) => {
+	reader.onload = async (e) => {
 		let text = reader.result
-		document.getElementById("drop-areaholder").classList.add('hide')
-		window.setTimeout(() => document.getElementById("drop-areaholder").classList.add('hidden'), 1000)
 
-		var lss = new SplitsFile(text)
-		document.getElementById("gamename").textContent = lss.game
-		document.getElementById("categoryname").textContent = lss.category
-		if (lss.gameicon) {
-			document.getElementById("gameicon").appendChild(lss.gameicon)
-		}
 
 		let timingid = document.querySelector(".timingchooser :checked").id
-		let timingmethod = "gametime"
+		let timingmethod = "GameTime"
 		switch( timingid ) {
 			case "timingauto":
-				if (  lss.splits[lss.splits.length-1].pb.gametime && lss.splits[lss.splits.length-1].pb.gametime.gt(0) ) {
-					break
-				}
-				// falls through
+				timingmethod = 'auto'
+				break
 			case "timingrt":
-				timingmethod = "realtime"
-				document.querySelector(".timing .info").textContent = "Real Time"
+				timingmethod = "RealTime"
 				break;
 		}
 
-		let pbattempt = lss.attempts[ [ ...lss.pbs[ timingmethod ] ].pop() -1 ]
+		window.setTimeout( () => {
+			document.getElementById("drop-areaholder").classList.add('hide')
+			window.setTimeout(() => document.getElementById("drop-areaholder").classList.add('hidden'), 1000)
+			new SplitsFile(text, timingmethod, (lss) => {
+				timingmethod = lss.timingmethod.toLowerCase()
+				document.getElementById("gamename").textContent = lss.game
+				document.getElementById("categoryname").textContent = lss.category
+				if (lss.gameicon) {
+					document.getElementById("gameicon").appendChild(lss.gameicon)
+				}
 
-		let goldtotal = new Duration(0)
-		let avgtotal = new Duration(0)
-		let maxdifftogold = lss.splits.reduce( (acc, seg) => {
-			let thisgold = seg.pbsegment[timingmethod].sub(seg.gold[timingmethod])
-			return thisgold.max(acc)
-		}, 0 )
+				let pbattempt = lss.allpbs.last()
+				let goldtotal = lss.sob.time
 
-		let maxdifftoavg = lss.splits.reduce( (acc, seg) => {
-			let thisavg = seg.pbsegment[timingmethod].sub(seg.average[timingmethod].average)
-			return thisavg.max(acc)
-		}, 0 )
-		let mindifftoavg = lss.splits.reduce( (acc, seg) => {
-			let thisavg = seg.pbsegment[timingmethod].sub(seg.average[timingmethod].average)
-			return thisavg.min(acc)
-		}, 0 )
+				let pbvscomp = {}
+				lss.comparisons.forEach ( (comp) => {
+					pbvscomp[comp.id] = new AttemptComparison( pbattempt, comp )
 
-		let mindiffcomp =  {}
-		let maxdiffcomp =  {}
-		lss.othercomparisons.forEach ( (comp) => {
-			mindiffcomp[comp] = lss.splits.reduce( (acc, seg) => {
-				let thisavg = seg.pbsegment[timingmethod].sub(seg.splittimes[comp]['segment' + timingmethod])
-				return thisavg.min(acc)
-			}, 0 )
-			maxdiffcomp[comp] = lss.splits.reduce( (acc, seg) => {
-				let thisavg = seg.pbsegment[timingmethod].sub(seg.splittimes[comp]['segment' + timingmethod])
-				return thisavg.max(acc)
-			}, 0 )
-			document.querySelector("#bestpaceheader").insertAdjacentHTML('beforebegin', `
-			<th colspan="2" class="gold-r">${comp}</th>
-			`)
-			document.querySelector("#bestpacesplitheader").insertAdjacentHTML('beforebegin', `
-			<th>Segment</th>
-			<th class="gold-r">Split</th>
-			`)
+					document.querySelector("#bestpaceheader").insertAdjacentHTML('beforebegin', `
+					<th colspan="2" class="gold-r">${comp.id}</th>
+					`)
+					document.querySelector("#bestpacesplitheader").insertAdjacentHTML('beforebegin', `
+					<th>Segment</th>
+					<th class="gold-r">Split</th>
+					`)
 
-		})
-		lss.splits.forEach( (seg) => {
+				})
 
-			var avgtime = seg.average[timingmethod].average
-			var cursplit = seg.pb[timingmethod]
-			var cursegment = seg.pbsegment[timingmethod]
-			var goldsplit = seg.gold[timingmethod]
-			var goldvspb = cursegment.sub(goldsplit)
-			goldtotal = goldtotal.add(goldsplit)
-			avgtotal = avgtotal.add(avgtime)
-			var avgvspb = cursegment.sub(avgtime)
-			let splithtml = `
-				<tr>
-					<td class="splitname">
-						${seg.icon ? seg.icon.outerHTML : '<i></i>'}
-						${seg.name}
-					</td>
-					<td class="gold-r">
-						${seg.resets}
-					</td>
-					<td>
-						${cursegment.format( goldsplit )}
-					</td>
-					<td>
-						${cursplit.format()}
-					</td>
-					<td class="gold-l">
-						<div class="${ goldvspb.gt(0) ? 'timeloss' : '' }" style="--p: ${(goldvspb.totalmilliseconds/maxdifftogold.totalmilliseconds)*100}%">
-							<span class="from">${goldsplit.format()}</span>
-							<span class="diff">${goldvspb.formatcomparison()}</span>
-						</div>
-					</td>
-					<td>
-						${goldtotal.format()}
-					</td>
-					<td class="gold-l">
-						<div
-							${ avgvspb.gt(0) ? 'class="timeloss" style="--p: ' + (avgvspb.totalmilliseconds/maxdifftoavg.totalmilliseconds)*100 + '%"' : '' }
-							${ avgvspb.lt(0) ? 'class="timegain" style="--p: ' + (avgvspb.totalmilliseconds/mindifftoavg.totalmilliseconds)*100 + '%"' : '' }
-						>
-							<span class="from">${avgtime.format()}</span>
-							<span class="diff">${avgvspb.formatcomparison()}</span>
-						</div>
-					</td>
-					<td>
-						${avgtotal.format()}
-					</td>
-			`
-			lss.othercomparisons.forEach( (comp) => {
-				var split = seg.splittimes[comp][timingmethod]
-				var segment = seg.splittimes[comp][ 'segment' + timingmethod ]
-				var compvspb = cursegment.sub(segment)
-				splithtml += `
-					<td class="gold-l">
-					<div
-						${ compvspb.gt(0) ? 'class="timeloss" style="--p: ' + (compvspb.totalmilliseconds/maxdiffcomp[comp].totalmilliseconds)*100 + '%"' : '' }
-						${ compvspb.lt(0) ? 'class="timegain" style="--p: ' + (compvspb.totalmilliseconds/mindiffcomp[comp].totalmilliseconds)*100 + '%"' : '' }
-					>
-						<span class="from">${segment.format()}</span>
-						<span class="diff">${compvspb.formatcomparison()}</span>
-					</div>
-				</td>
-				<td>
-					${split.format()}
-				</td>
-				`
-			})
-			splithtml += `
-					<td class="gold-l">
-						${seg.bestpace[timingmethod].format()}
-					</td>
-					<td>
-						${seg.bestpace.attemptid}
-					</td>
+				lss.segments.forEach( (seg) => {
+					let segaverage = lss.average.splits.findBySegment(seg)
+					let seginpb = lss.pb.splits.findBySegment(seg)
+					let seginsob = lss.sob.splits.findBySegment(seg)
+					let avgtotal = segaverage.time
+					let goldsplit = seginsob.time
 
-				</tr>
-
-			`
-			document.querySelector("#splits tbody").insertAdjacentHTML('beforeend', splithtml)
-		})
-
-		document.querySelector( ".personalbest .info" ).innerHTML = pbattempt[timingmethod].format()
-		document.querySelector(".sumofbest .info").innerHTML = goldtotal.format()
-		document.querySelector(".pbvssob .info").innerHTML = pbattempt[timingmethod].sub(goldtotal).formatcomparison()
-		document.querySelector(".attempts .info").textContent = lss.pbs[timingmethod].length + ' / ' + lss.completedruns[timingmethod].length + ' / ' + lss.attemptcount
-		let bestpbimprovement = lss.attempts.filter( seg => (( timingmethod == "realtime" &&  seg.rtpbimprovement ) ||  (timingmethod == "gametime" && seg.gtpbimprovement) ) ).reduce( ( acc, seg ) => {
-			if ( timingmethod == "realtime" ) {
-				return seg.rtpbimprovement.min(acc)
-			}
-			return seg.gtpbimprovement.min(acc)
-		}, 0)
-		lss.attempts.filter( (seg) => {
-			let pbfound = lss.pbs[timingmethod].indexOf(seg.id)
-			let completedfound = lss.completedruns[timingmethod].indexOf(seg.id)
-
-			let attempthtml = `
-			<tr class="attempt ${ pbfound >= 0 ? 'pbrun ' + ( (pbfound %2 == 0 ) ? 'pbeven' : 'pbodd')  : '' } ${completedfound >= 0 ? 'completed ' + ( (completedfound %2 == 0 ) ? 'completedeven' : 'completedodd') : ''}">
-				<td class="rightalign">
-					${seg.id}
-				</td>
-				<td>${seg.started}</td>
-			`
-
-			if ( ( seg.completed.realtime || seg.completed.gametime ) && seg[timingmethod] ) {
-				attempthtml += `
-				<td class="rightalign">${seg[timingmethod].format()}</td>
-				<td class="rightalign">
-					${ seg.wasgtpb && seg.gtpbimprovement && timingmethod == "gametime" ? '<div class="timegain" style="--p: ' + (seg.gtpbimprovement.totalmilliseconds/bestpbimprovement.totalmilliseconds)*100 + '%">' + seg.gtpbimprovement.formatcomparison() +  '</div>' : '' }
-					${ seg.wasrtpb && seg.rtpbimprovement && timingmethod == "realtime" ? 'class="timegain" style="--p: ' + (seg.rtpbimprovement.totalmilliseconds/bestpbimprovement.totalmilliseconds)*100 + '%">' + seg.rtpbimprovement.formatcomparison() +  '</div>' : '' }
-				</td>`
-			}	else {
-				attempthtml += `
-				<td class="leftalign" colspan="2">Reset at ${seg.diedat}</td>
-				`
-			}
-
-			attempthtml += `</tr>`
-			document.querySelector("#attempthistory tbody").insertAdjacentHTML('beforeend', attempthtml)
-		})
-
-
-		var pbsplits = lss.splits.map( (seg) => {
-			return seg.pbsegment[timingmethod].totalmilliseconds
-		})
-		goldtotal = new Duration(0)
-		var sobsplits = lss.splits.map( (seg) => {
-			goldtotal = goldtotal.add(seg.gold[timingmethod])
-			return seg.gold[timingmethod].totalmilliseconds
-		})
-
-		let comptotal = pbattempt[timingmethod].totalmilliseconds
-		let savingtotal = pbattempt[timingmethod].sub(goldtotal)
-		document.querySelector("#prettycomparisons").insertAdjacentHTML('beforeend', `
-			<div>
-				<div class="bars">
-				${ pbsplits.map( (split, index) => {
-					let timesave = new Duration( split - sobsplits[index] )
-					return `
-						<div style="--w: ${ ( split / comptotal) *100 }%; --tsw: ${ ( timesave.totalmilliseconds / savingtotal.totalmilliseconds ) * 100}%; --rsw: ${ ( lss.splits[index].resets / lss.attempts.length ) * 100 }%; --rswo: ${ ( (index == 0 ? 0 : lss.splits[index].resets ) / (lss.attempts.length - lss.splits[0].resets) ) *100 }%">
-							<div class="goldbar" style="--gw: ${ ( sobsplits[index] / split ) *100 }%"></div>
-							<span class="split">${ lss.splits[index].name.replace(/(\w)[\w]+[\s]?/g, '$1').replace(/-/g, '').replace(/{.*}/g, '') }</span>
-							<span class="time">${ new Duration( split ).plainshortformat() }</span>
-							<span class="timesave">${timesave.humanformat() }</span>
-							<span class="resets">${ lss.splits[index].resets }
-								<span class="resetpc">(${ ( ( lss.splits[index].resets / lss.attempts.length ) * 100).toFixed(2) }%)</span>
-								<span class="resetpcex1">(${ (( (index == 0 ? 0 : lss.splits[index].resets ) / (lss.attempts.length - lss.splits[0].resets) ) *100).toFixed(2) }%)</span>
-
-							</span>
-							<span class="pts"><abbr title="Potential time save">Can save</abbr>: ${timesave.humanformat()}</span>
-						</div>
+					let goldvspb = lss.pbvsgold.diff( seg )
+					let avgvspb = lss.pbvsavg.diff( seg )
+					let splithtml = `
+						<tr>
+							<td class="splitname">
+								${seg.icon.image ? seg.icon.image.outerHTML : '<i></i>'}
+								${seg.name}
+							</td>
+							<td>
+								${seg.rundeaths}
+							</td>
+							<td class="gold-r">
+								${seg.successrate}
+							</td>
+							<td>
+								${seginpb.segmenttime.format( seginsob.segmenttime )}
+							</td>
+							<td>
+								${seginpb.time.format()}
+							</td>
+							<td class="gold-l">
+								<div class="${ goldvspb.gt(0) ? 'timeloss' : '' }" style="--p: ${lss.pbvsgold.diffaspercentofmax( seg )}%">
+									<span class="from">${seginsob.segmenttime.format()}</span>
+									<span class="diff">${goldvspb.formatcomparison()}</span>
+								</div>
+							</td>
+							<td>
+								${goldsplit.format()}
+							</td>
+							<td class="gold-l">
+								<div
+									${ avgvspb.gt(0) ? 'class="timeloss" style="--p: ' + lss.pbvsavg.diffaspercentofmax( seg ) + '%"' : '' }
+									${ avgvspb.lt(0) ? 'class="timegain" style="--p: ' + lss.pbvsavg.diffaspercentofmin( seg ) + '%"' : '' }
+								>
+									<span class="from">${segaverage.segmenttime.format()}</span>
+									<span class="diff">${avgvspb.formatcomparison()}</span>
+								</div>
+							</td>
+							<td>
+								${avgtotal.format()}
+							</td>
 					`
-				} ).join("") }
-				</div>
-			</div>
-		`)
-		document.getElementById("results").classList.remove('hidden')
+
+					lss.comparisons.forEach( (comp) => {
+						let compsplit = pbvscomp[comp.id].attempt2.splits.findBySegment( seg )
+						var split = compsplit.time
+						var segment = compsplit.segmenttime
+						var compvspb = pbvscomp[comp.id].diff(seg)
+						splithtml += `
+							<td class="gold-l">
+							<div
+								${ compvspb.gt(0) ? 'class="timeloss" style="--p: ' + pbvscomp[comp.id].diffaspercentofmax() + '%"' : '' }
+								${ compvspb.lt(0) ? 'class="timegain" style="--p: ' + pbvscomp[comp.id].diffaspercentofmin() + '%"' : '' }
+							>
+								<span class="from">${ segment?.format?.() }</span>
+								<span class="diff">${compvspb.formatcomparison()}</span>
+							</div>
+						</td>
+						<td>
+							${ split?.format?.() }
+						</td>
+						`
+					})
+
+					splithtml += `
+							<td class="gold-l">
+								${seg.bestpace.time.format()}
+							</td>
+							<td>
+								${seg.bestpace.attempt.id}
+							</td>
+
+						</tr>
+
+					`
+					document.querySelector("#splits tbody").insertAdjacentHTML('beforeend', splithtml)
+				})
+
+				document.querySelector( ".personalbest .info" ).innerHTML = lss.pb.runduration.format()
+				document.querySelector(".sumofbest .info").innerHTML = lss.sob.runduration.format()
+				document.querySelector(".pbvssob .info").innerHTML = lss.pbvsgold.diff().formatcomparison()
+				document.querySelector(".attempts .info").textContent = lss.allpbs.length + ' / ' + lss.allcompletions.length + ' / ' + lss.attemptcount
+
+
+				let bestpbimprovement = lss.allpbs.reduce( ( acc, pb ) => {
+					let comp = new AttemptComparison(pb, pb.lastpb)
+					return comp.diff().min(acc)
+				}, 0)
+
+
+				lss.allattempts.forEach( (attempt) => {
+
+					let pbfound = lss.allpbs.indexOf(attempt)
+					let completedfound = lss.allcompletions.indexOf(attempt)
+
+					let attempthtml = `
+					<tr class="attempt ${ pbfound >= 0 ? 'pbrun ' + ( (pbfound %2 == 0 ) ? 'pbeven' : 'pbodd')  : '' } ${completedfound >= 0 ? 'completed ' + ( (completedfound %2 == 0 ) ? 'completedeven' : 'completedodd') : ''}">
+						<td class="rightalign">
+							${attempt.id}
+						</td>
+						<td>${attempt.started}</td>
+					`
+
+					if ( attempt.completed && attempt.runduration ) {
+						let pbcomparison
+						if ( attempt.pb ) {
+							pbcomparison = new AttemptComparison( attempt, attempt.lastpb )
+
+						}
+						attempthtml += `
+						<td class="rightalign">${attempt.runduration.format()}</td>
+						<td class="rightalign">
+						<div ${ attempt.pb ? 'class="timegain" style="--p: ' + (pbcomparison.diff()/bestpbimprovement)*100 + '%">' + pbcomparison.diff().formatcomparison() +  '</div>' : '' }
+						</td>`
+					}	else {
+						attempthtml += `
+						<td class="leftalign" colspan="2">Reset at ${attempt.diedat.name}</td>
+						`
+					}
+
+					attempthtml += `</tr>`
+					document.querySelector("#attempthistory tbody").insertAdjacentHTML('beforeend', attempthtml)
+				})
+
+				let savingtotal = lss.pbvsgold.diff()
+				document.querySelector("#prettycomparisons").insertAdjacentHTML('beforeend', `
+					<div>
+						<div class="bars">
+						${ lss.pbvsgold.attempt1.splits.map( (split, index) => {
+							let segmentdeaths = split.segment.rundeaths
+							let timesave =  lss.pbvsgold.diff( split.segment )
+							let pbtime = split.segmenttime
+							return `
+								<div style="--w: ${ ( pbtime / lss.pbvsgold.attempt1.runduration) *100 }%; --tsw: ${ ( timesave / savingtotal ) * 100}%; --rsw: ${ ( segmentdeaths / lss.allattempts.length ) * 100 }%; --rswo: ${ ( (index == 0 ? 0 : segmentdeaths ) / (lss.allattempts.length - lss.segments[0].rundeaths) ) *100 }%">
+									<div class="goldbar" style="--gw: ${ ( lss.pbvsgold.attempt2.splits[index].segmenttime / pbtime ) *100 }%"></div>
+									<span class="split">${ split.segment.shortName }</span>
+									<span class="time">${ pbtime.plainshortformat() }</span>
+									<span class="timesave">${timesave.humanformat() }</span>
+									<span class="resets">${ segmentdeaths }
+										<span class="resetpc">(${ ( ( segmentdeaths / lss.allattempts.length ) * 100).toFixed(2) }%)</span>
+										<span class="resetpcex1">(${ (( (index == 0 ? 0 : segmentdeaths ) / (lss.allattempts.length - lss.segments[0].rundeaths) ) *100).toFixed(2) }%)</span>
+
+									</span>
+									<span class="pts"><abbr title="Potential time save">Can save</abbr>: ${timesave.humanformat()}</span>
+								</div>
+							`
+						} ).join("") }
+						</div>
+					</div>
+				`)
+
+				document.getElementById("results").classList.remove('hidden')
+			})
+		}, 100)
 	}
 	reader.readAsText(file)
 	console.log(file)
