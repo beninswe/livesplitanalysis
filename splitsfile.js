@@ -1,6 +1,6 @@
-import Duration from './duration.js?v001'
+import Duration from './duration.js?v002'
 
-import { Icon, SplitGroup, Segment, Split, Attempt, AttemptCollection, SegmentArray, AverageAttempt, AttemptComparison } from './splitclasses.js?v001'
+import { Icon, SplitGroup, Segment, Split, Attempt, AttemptCollection, SegmentArray, AverageAttempt, AttemptComparison } from './splitclasses.js?v002'
 export default class SplitsFile {
 	lssDoc
 	game

@@ -1,7 +1,7 @@
-import SplitsFile from './splitsfile.js?v001'
+import SplitsFile from './splitsfile.js?v002'
 
-import {  AttemptComparison } from './splitclasses.js?v001'
-import Duration from './duration.js?v001';
+import {  AttemptComparison } from './splitclasses.js?v002'
+import Duration from './duration.js?v002'
 
 let dropArea = document.getElementById('drop-area')
 ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -284,15 +284,21 @@ function uploadFile(file) {
 							}),
 							series: [
 								lss.allattempts.map((a) => {
-									return a.completed ? a.runduration?.totalmilliseconds : null
+									return {
+										meta: 'Attempt #' + a.id,
+										value: a.completed ? a.runduration?.totalmilliseconds : null
+									}
 								}),
 								lss.allattempts.map((a) => {
-									return a.pb ? a.runduration.totalmilliseconds : null
+									return {
+										meta: 'PB in Attempt #' + a.id,
+										value: a.pb ? a.runduration.totalmilliseconds : null
+									}
 								})
 							]
 						};
 						var options = {
-							lineSmooth: Chartist.Interpolation.cardinal({
+							lineSmooth: Chartist.Interpolation.monotoneCubic({
 								fillHoles: true,
 							}),
 
@@ -309,6 +315,11 @@ function uploadFile(file) {
 							},
 							chartPadding: 30,
 							plugins: [
+								Chartist.plugins.tooltip({
+									transformTooltipTextFnc: (v) => {
+										return new Duration(v).plainshortformat()
+									}
+								}),
 								Chartist.plugins.ctAxisTitle({
 									axisX: {
 										axisTitle: "Attempt #",
@@ -351,13 +362,17 @@ function uploadFile(file) {
 									lss.allattempts.map((a) => {
 										let split = a.splits.findBySegment(segment)
 										if ( !split.time ) return null
-										return split?.segmenttime?.totalmilliseconds || null
+										return {
+											meta: "Attempt #" + a.id,
+											value: split?.segmenttime?.totalmilliseconds || null
+										}
 									})
 								]
-							};
+							}
 							var options = {
-								lineSmooth: Chartist.Interpolation.cardinal({
-									fillHoles: true,
+								lineSmooth: Chartist.Interpolation.monotoneCubic({
+									fillHoles: true
+
 								}),
 								low: Math.max(lss.allattempts.reduce((acc, a) => {
 									return acc.min(a.splits.findBySegment(segment)?.segmenttime || acc )
@@ -381,6 +396,11 @@ function uploadFile(file) {
 								},
 								chartPadding: 30,
 								plugins: [
+									Chartist.plugins.tooltip({
+										transformTooltipTextFnc: (v) => {
+											return new Duration(v).plainshortformat()
+										}
+									}),
 									Chartist.plugins.ctAxisTitle({
 										axisX: {
 											axisTitle: "Attempt #",
@@ -422,4 +442,30 @@ function uploadFile(file) {
 	reader.readAsText(file)
 	console.log(file)
 }
+document.querySelector('.splitsio').addEventListener('submit', async ( e ) => {
+	let progressbar = document.getElementById("progressbar")
+	progressbar.classList.remove('hidden')
+	e.preventDefault()
+	let splitsioid = document.querySelector('#splitsioid').value
 
+	splitsioid = splitsioid.replace('https://splits.io/', '')
+	splitsioid = splitsioid.replace(/[^A-z0-9]/, '')
+
+	console.log( splitsioid )
+
+	let url = 'https://splits.io/' + splitsioid + '/export/livesplit'
+
+	let response = await fetch( url )
+	if ( response.status == 200 && response.url ) {
+		let lssfile = await fetch( response.url )
+		console.log(lssfile)
+		let body = await lssfile.blob()
+		uploadFile(body)
+	} else {
+		alert( 'something went wrong')
+		console.log(response)
+	}
+
+
+
+})

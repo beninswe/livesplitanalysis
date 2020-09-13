@@ -5,9 +5,11 @@
 			href="https://fonts.googleapis.com/css?family=Lato">
 
 		<title>LiveSplit Analysis</title>
-		<script type="module" src="script.js?v001"></script>
+		<script type="module" src="script.js?v002"></script>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.css" integrity="sha512-V0+DPzYyLzIiMiWCg3nNdY+NyIiK9bED/T1xNBj08CaIUyK3sXRpB26OUCIzujMevxY9TRJFHQIxTwgzb0jVLg==" crossorigin="anonymous" />
-		<link rel="stylesheet" href="style.css?v001">
+		<link rel="stylesheet" href="chartist-plugin-tooltip.css">
+		<link rel="stylesheet" href="style.css?v002">
+
 	</head>
 	<body>
 		<div id="drop-areaholder">
@@ -19,8 +21,13 @@
 						<input type="radio" name="timing" id="timinggt"><label for="timinggt">Game Time</label>
 						<input type="radio" name="timing" id="timingrt"><label for="timingrt">Real Time</label>
 					</div>
-					<input type="file" id="fileElem" onchange="handleFiles(this.files)">
+					<input type="file" id="fileElem" accept=".lss" onchange="handleFiles(this.files)">
 					<label class="button" for="fileElem">Select .lss file</label>
+				</form>
+				<form class="splitsio">
+					<p>Alternatively enter the <a href="https://splits.io/">splits.io</a> id:</p>
+					<label>https://splits.io/</label><input type="text" name="splitsioid" style="width: 6rem" id="splitsioid" autocomplete="off">
+					<button class="button">Fetch</button>
 				</form>
 
 			<div id="progressbar" class="hidden">
@@ -180,4 +187,5 @@
 	</body>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.js" integrity="sha512-9rxMbTkN9JcgG5euudGbdIbhFZ7KGyAuVomdQDI9qXfPply9BJh0iqA7E/moLCatH2JD4xBGHwV6ezBkCpnjRQ==" crossorigin="anonymous"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chartist-plugin-axistitle@0.0.7/dist/chartist-plugin-axistitle.min.js" integrity="sha256-prApUlf6GL5TScu+1fzXL6UDmTFLl9v2Bsk57h4zlK8=" crossorigin="anonymous"></script>
+	<script src="chartist-plugin-tooltip.js"></script>
 </html>

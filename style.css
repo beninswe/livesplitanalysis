@@ -572,3 +572,19 @@ a {
 #segmentchart {
 	width: 75vw;
 }
+.splitsio .button {
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.chartist-tooltip {
+	font-family: 'Lato', serif;
+	background: #ddd;
+	color: #1d1d1d;
+	font-size: 14px;
+	z-index: 1000;
+}
+
+.chartist-tooltip:before {
+	border-top-color: #999;
+}
