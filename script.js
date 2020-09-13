@@ -1,7 +1,7 @@
-import SplitsFile from './splitsfile.js'
+import SplitsFile from './splitsfile.js?v001'
 
-import {  AttemptComparison } from './splitclasses.js'
-import Duration from './duration.js';
+import {  AttemptComparison } from './splitclasses.js?v001'
+import Duration from './duration.js?v001';
 
 let dropArea = document.getElementById('drop-area')
 ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -144,12 +144,12 @@ function uploadFile(file) {
 								${ compvspb.gt(0) ? 'class="timeloss" style="--p: ' + pbvscomp[comp.id].diffaspercentofmax() + '%"' : '' }
 								${ compvspb.lt(0) ? 'class="timegain" style="--p: ' + pbvscomp[comp.id].diffaspercentofmin() + '%"' : '' }
 							>
-								<span class="from">${ segment?.format?.() }</span>
-								<span class="diff">${compvspb.formatcomparison()}</span>
+								<span class="from">${ segment?.format?.() || '--' }</span>
+								<span class="diff">${ segment ? compvspb.formatcomparison() : '' }</span>
 							</div>
 						</td>
 						<td>
-							${ split?.format?.() }
+							${ split?.format?.() || '--' }
 						</td>
 						`
 					})
@@ -284,7 +284,7 @@ function uploadFile(file) {
 							}),
 							series: [
 								lss.allattempts.map((a) => {
-									return a.runduration?.totalmilliseconds
+									return a.completed ? a.runduration?.totalmilliseconds : null
 								}),
 								lss.allattempts.map((a) => {
 									return a.pb ? a.runduration.totalmilliseconds : null
@@ -349,7 +349,9 @@ function uploadFile(file) {
 								}),
 								series: [
 									lss.allattempts.map((a) => {
-										return a.splits.findBySegment(segment)?.segmenttime?.totalmilliseconds
+										let split = a.splits.findBySegment(segment)
+										if ( !split.time ) return null
+										return split?.segmenttime?.totalmilliseconds || null
 									})
 								]
 							};
@@ -362,6 +364,8 @@ function uploadFile(file) {
 								}, new Duration (1000*60*60*24)).sub(new Duration(1000*30)),0),
 								high: Math.max(
 									lss.allattempts.reduce((acc, a) => {
+										let split = a.splits.findBySegment(segment)
+										if ( !split.time ) return acc
 										return acc.max(a.splits.findBySegment(segment)?.segmenttime || acc )
 									}, new Duration (0)).add(new Duration(1000*30)),0),
 								axisX: {

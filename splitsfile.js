@@ -1,6 +1,6 @@
-import Duration from './duration.js'
+import Duration from './duration.js?v001'
 
-import { Icon, SplitGroup, Segment, Split, Attempt, AttemptCollection, SegmentArray, AverageAttempt, AttemptComparison } from './splitclasses.js'
+import { Icon, SplitGroup, Segment, Split, Attempt, AttemptCollection, SegmentArray, AverageAttempt, AttemptComparison } from './splitclasses.js?v001'
 export default class SplitsFile {
 	lssDoc
 	game
@@ -73,7 +73,7 @@ export default class SplitsFile {
 			let seg = this.lssDoc.querySelectorAll( "Segment" )[index]
 			;[ ...seg.querySelectorAll( "SplitTime" ) ].forEach( ( comparison ) => {
 				let splitname = comparison.getAttribute('name')
-				let splittime = comparison.querySelector( this.timingmethod ).textContent
+				let splittime = comparison.querySelector( this.timingmethod )?.textContent
 				if ( splitname == 'Personal Best') {
 					this.pb.updateSegmentSplit( segment, splittime )
 				} else {
