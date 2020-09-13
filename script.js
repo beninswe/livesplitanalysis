@@ -1,7 +1,7 @@
-import SplitsFile from './splitsfile.js?v002'
+import SplitsFile from './splitsfile.js?v003'
 
-import {  AttemptComparison } from './splitclasses.js?v002'
-import Duration from './duration.js?v002'
+import {  AttemptComparison } from './splitclasses.js?v003'
+import Duration from './duration.js?v003'
 
 let dropArea = document.getElementById('drop-area')
 ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -105,10 +105,10 @@ function uploadFile(file) {
 								${seg.successrate}
 							</td>
 							<td>
-								${seginpb.segmenttime.format( seginsob.segmenttime )}
+								${seginpb.segmenttime?.format( seginsob.segmenttime ) || '--'}
 							</td>
 							<td>
-								${seginpb.time.format()}
+								${seginpb.time?.format() || '--'}
 							</td>
 							<td class="gold-l">
 								<div class="${ goldvspb.gt(0) ? 'timeloss' : '' }" style="--p: ${lss.pbvsgold.diffaspercentofmax( seg )}%">
@@ -156,11 +156,11 @@ function uploadFile(file) {
 
 					splithtml += `
 							<td class="gold-l">
-								${seg.bestpace.time.format()}
+								${seg.bestpace.time?.format() || '--'}
 							</td>
-							<td>
+							<td>${seg.bestpace.attempt ? `
 								<a href="" class="viewattempt" data-attemptid="${seg.bestpace.attempt.id}">${seg.bestpace.attempt.id}</a>
-							</td>
+							` : '--' }</td>
 
 						</tr>
 
@@ -226,8 +226,8 @@ function uploadFile(file) {
 								<div style="--w: ${ ( pbtime / lss.pbvsgold.attempt1.runduration) *100 }%; --tsw: ${ ( timesave / savingtotal ) * 100}%; --rsw: ${ ( segmentdeaths / lss.allattempts.length ) * 100 }%; --rswo: ${ ( (index == 0 ? 0 : segmentdeaths ) / (lss.allattempts.length - lss.segments[0].rundeaths) ) *100 }%">
 									<div class="goldbar" style="--gw: ${ ( lss.pbvsgold.attempt2.splits[index].segmenttime / pbtime ) *100 }%"></div>
 									<span class="split">${ split.segment.shortName }</span>
-									<span class="time">${ pbtime.plainshortformat() }</span>
-									<span class="timesave">${timesave.humanformat() }</span>
+									<span class="time">${ pbtime?.plainshortformat() || '-' }</span>
+									<span class="timesave">${timesave?.humanformat() || '-' }</span>
 									<span class="resets">${ segmentdeaths }
 										<span class="resetpc">(${ ( ( segmentdeaths / lss.allattempts.length ) * 100).toFixed(2) }%)</span>
 										<span class="resetpcex1">(${ (( (index == 0 ? 0 : segmentdeaths ) / (lss.allattempts.length - lss.segments[0].rundeaths) ) *100).toFixed(2) }%)</span>
@@ -350,7 +350,7 @@ function uploadFile(file) {
 							wrapper.classList.remove('hidden')
 							wrapper.querySelector('.modaltitle').textContent = segment.name
 							wrapper.querySelector('.modalcontent').innerHTML = `
-							<div id="segmentchart" class="ct-chart ct-perfect-fourth"></div>
+							<div id="segmentchart" class="ct-chart"></div>
 							`
 
 
