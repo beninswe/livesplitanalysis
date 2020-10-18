@@ -64,6 +64,7 @@ export class Segment {
 		time: undefined,
 		attempt: undefined
 	}
+	gold
 	totaltime = new Duration(0)
 	constructor(id, name, icon, previoussegment) {
 		this.id = id
@@ -357,6 +358,85 @@ export class AverageAttempt extends Attempt {
 export class AttemptCollection extends BaseArray {
 	// e.g. collection of PBs/Completed Runs etc
 
+	rollingaverage( segment ) {
+		let rollingavgdivisor = parseInt(Math.min( ( this.length - this[0].splits[0].segment.rundeaths )  / 10).toFixed(0) )
+		let leftover = ( this.length -1 ) % rollingavgdivisor
+		let rollingtotal = new Duration(0)
+		let rollingcount = 0
+		let rollingstart = 0
+		return this.map( (a, index) => {
+			let split = a.splits.findBySegment( segment )
+			if ( split.time && split.segmenttime ) {
+				rollingtotal = rollingtotal.add( split.segmenttime )
+				rollingcount++
+			}
+
+			if ( ( index > 0 && index % rollingavgdivisor == leftover ) || index == this.length - 1 ) {
+				let total = rollingtotal
+				let count = rollingcount
+				rollingtotal = new Duration(0)
+				rollingcount = 0
+				let start = rollingstart
+				rollingstart = index
+				if ( total == 0 ) {
+					return null
+				}
+				return {
+					end: index,
+					start: start,
+					total: total,
+					avg: total.avg(count)
+
+				}
+			}
+			return null
+		})
+
+	}
+	distancefromGold( segment ) {
+
+		return this.map( (a, index) => {
+			let split = a.splits.findBySegment( segment )
+			if ( !split.time || !split.segmenttime) {
+				return null
+			}
+			return parseInt((((split.segmenttime / segment.gold.segmenttime) - 1)*100).toFixed(0))
+		})
+	}
+
+	orderbytime( segment ) {
+		return this.map( (a) => {
+			let split = a.splits.findBySegment( segment )
+			if ( !split.time || !split.segmenttime) {
+				return null
+			}
+			return {
+				id: a.id,
+				split: split
+			}
+
+		}).filter( a => a ).sort( (a, b) => a.split.segmenttime - b.split.segmenttime )
+	}
+
+	percentilebase( segment ) {
+		return this.map( (a) => {
+			let split = a.splits.findBySegment( segment )
+			if ( !split.time || !split.segmenttime) {
+				return null
+			}
+			return split.segmenttime
+		}).filter( a => a ).sort( (a, b) => a - b )
+	}
+
+	percentilebasems( segment ) {
+		return this.map( (a) => {
+			let split = a.splits.findBySegment( segment )
+			if ( !split.time || !split.segmenttime) {
+				return null
+			}
+			return (split.segmenttime.totalmilliseconds/1000).toFixed(0)*1000
+		}).filter( a => a ).sort( (a, b) => a - b )
+	}
 }
 
 export class AttemptComparison {

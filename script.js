@@ -1,7 +1,7 @@
-import SplitsFile from './splitsfile.js?v003'
+import SplitsFile from './splitsfile.js?v004'
 
-import {  AttemptComparison } from './splitclasses.js?v003'
-import Duration from './duration.js?v003'
+import {  AttemptComparison } from './splitclasses.js?v004'
+import Duration from './duration.js?v004'
 
 let dropArea = document.getElementById('drop-area')
 ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -163,7 +163,6 @@ function uploadFile(file) {
 							` : '--' }</td>
 
 						</tr>
-
 					`
 					document.querySelector("#splits tbody").insertAdjacentHTML('beforeend', splithtml)
 				})
@@ -178,7 +177,6 @@ function uploadFile(file) {
 					let comp = new AttemptComparison(pb, pb.lastpb)
 					return comp.diff().min(acc)
 				}, 0)
-
 
 				lss.allattempts.forEach( (attempt) => {
 
@@ -242,12 +240,20 @@ function uploadFile(file) {
 				`)
 
 				document.getElementById("results").classList.remove('hidden')
+				let wrapper = document.querySelector('.modalviewerwrapper')
 
+				document.addEventListener("keydown", (e) => {
+					if ( !wrapper.classList.contains('hidden') ) {
+						if (e.key == "Escape" || e.key == "Esc" ) {
+							wrapper.classList.add('hidden')
+						}
+					}
+				})
 				document.querySelector(".tabs").addEventListener("click", (e) => {
 
 					if ( e.target.classList.contains('viewattempt') ) {
 						let attempt = lss.allattempts.find( e.target.dataset.attemptid )
-						let wrapper = document.querySelector(".modalviewerwrapper")
+
 						if ( attempt ) {
 							wrapper.classList.remove('hidden')
 							wrapper.querySelector('.modaltitle').textContent = "Attempt #" + attempt.id
@@ -278,25 +284,37 @@ function uploadFile(file) {
 
 						e.preventDefault()
 					} else if ( e.target.classList.contains('attemptstab') ) {
-						var data = {
-							labels: lss.allattempts.map((a) => {
-								return a.id
-							}),
-							series: [
-								lss.allattempts.map((a) => {
-									return {
-										meta: 'Attempt #' + a.id,
-										value: a.completed ? a.runduration?.totalmilliseconds : null
-									}
+						let attemptchart
+						let chartdata = (min, max) => {
+							min = min || -Infinity
+							max = max || Infinity
+							let filteredattempts = lss.allattempts.filter( (a) => {
+								return (a.id >= min && a.id <= max )
+							} )
+							return {
+								labels: filteredattempts.map((a) => {
+									return a.id
 								}),
-								lss.allattempts.map((a) => {
-									return {
-										meta: 'PB in Attempt #' + a.id,
-										value: a.pb ? a.runduration.totalmilliseconds : null
-									}
-								})
-							]
-						};
+								series: [
+									filteredattempts.map((a) => {
+										return {
+											meta: 'Attempt #' + a.id,
+											value: a.completed ? a.runduration?.totalmilliseconds : null
+										}
+									}),
+									filteredattempts.map((a) => {
+										return {
+											meta: 'PB in Attempt #' + a.id,
+											value: a.pb ? a.runduration.totalmilliseconds : null
+										}
+									})
+								]
+							}
+						}
+						window.updateAttempts = (min, max) => {
+							attemptchart.update( chartdata(min, max) )
+						}
+						var data = chartdata()
 						var options = {
 							lineSmooth: Chartist.Interpolation.monotoneCubic({
 								fillHoles: true,
@@ -342,24 +360,139 @@ function uploadFile(file) {
 								})
 							]
 						}
-						new Chartist.Line('#rundurationchart', data, options);
+						attemptchart = new Chartist.Line('#rundurationchart', data, options)
+
+						var handlesSlider = document.getElementById('rundurationslider');
+						var startingid = parseInt(lss.allattempts[0].id, 10)
+						var endingid = parseInt(lss.allattempts.last().id, 10)
+						if ( handlesSlider.noUiSlider ) {
+							handlesSlider.noUiSlider.destroy()
+						}
+						noUiSlider.create(handlesSlider, {
+							start: [startingid, endingid],
+							step: 1,
+							tooltips: [true,true],
+							connect: true,
+							range: {
+								'min': [startingid],
+								'max': [endingid]
+							},
+							format: {
+								to: function(value) {
+									return "Attempt #" + value.toFixed(0)
+								},
+								from: function(value) {
+									return parseInt(value.replace("Attempt #", ""), 10)
+								}
+							}
+						})
+
+
+						handlesSlider.noUiSlider.on('change', function( a,b ) {
+							var from = parseInt(a[0].replace("Attempt #", ""),10)
+							var to = parseInt(a[1].replace("Attempt #", ""),10)
+							attemptchart.update( chartdata( from, to ) )
+						})
+
 					} else if ( e.target.classList.contains('viewsegment') ) {
 						let segment = lss.segments[ e.target.dataset.segmentindex ]
-						let wrapper = document.querySelector(".modalviewerwrapper")
+
 						if ( segment ) {
+							let orderedattempts = lss.allattempts.orderbytime( segment )
+							let percentilearray = lss.allattempts.percentilebase( segment )
+							let percent10th = percentilearray[Math.ceil( percentilearray.length *.10 ) ]
+							let percent90th = percentilearray[Math.ceil( percentilearray.length *.90 ) ]
+							let percent95th = percentilearray[Math.ceil( percentilearray.length *.95 ) ]
 							wrapper.classList.remove('hidden')
-							wrapper.querySelector('.modaltitle').textContent = segment.name
+							wrapper.querySelector('.modaltitle').innerHTML = `<h1>${segment.name}</h1>`
+							let goldcounter = 0
+							let currentsegmentgold = Infinity
+							let bestgolddiff = Infinity
+							lss.allattempts.map((attempt) => {
+								let split = attempt.splits.findBySegment(segment)
+								let isGold = ( split.segmenttime < currentsegmentgold )
+								if ( isGold ) {
+									let diff = new Duration(0)
+									if ( currentsegmentgold != Infinity ) {
+										diff = split.segmenttime.sub(currentsegmentgold)
+									}
+									if ( diff < bestgolddiff ) {
+										bestgolddiff = diff
+									}
+									currentsegmentgold = split.segmenttime
+
+								}
+							})
+							currentsegmentgold = Infinity
 							wrapper.querySelector('.modalcontent').innerHTML = `
-							<div id="segmentchart" class="ct-chart"></div>
+							<div class="segmentdata">
+								<div class="history">
+
+									<input type="radio" name="splitruntype" id="goldonly" class="pbonly" checked="checked"><label for="goldonly">Gold Progression</label><input type="radio" name="splitruntype" id="allsegmentruns" class="allruns"><label for="allsegmentruns">All runs with Segment times</label><br>
+									<table id="segmentattempthistory" class="table attempthistory">
+										<tr>
+											<th>Attempt</th>
+											<th>Date</th>
+											<th>Time</th>
+											<th>Improvement</th>
+										</tr>
+										<tbody>
+											${ lss.allattempts.map((attempt) => {
+
+												let split = attempt.splits.findBySegment(segment)
+												let isGold = ( split.segmenttime < currentsegmentgold )
+												if ( isGold ) {
+													goldcounter++
+
+												}
+												if ( !split.segmenttime ) {
+													return ''
+												}
+												let attempthtml =
+													`<tr class="attempt ${ isGold ? 'pbrun ' + ( (goldcounter %2 == 0 ) ? 'pbeven' : 'pbodd')  : '' }">
+														<td class="rightalign">
+															<a href="" class="viewattempt" data-attemptid="${attempt.id}">${attempt.id}</a>
+														</td>
+														<td>${attempt.started}</td>
+												`
+
+												if ( isGold ) {
+													let diff = new Duration(0)
+
+													if ( currentsegmentgold != Infinity ) {
+														diff = split.segmenttime.sub(currentsegmentgold)
+													}
+													attempthtml += `
+													<td class="rightalign">${split.segmenttime.format()}</td>
+													<td class="rightalign">
+													<div class="timegain" style="--p: ${(diff/bestgolddiff)*100}%">${diff.formatcomparison()}</div>
+													</td>
+													`
+													currentsegmentgold = split.segmenttime
+												} else {
+													attempthtml += `<td class="rightalign">${ split.segmenttime.format()}</td><td class="leftalign" ></td>`
+												}
+												return attempthtml
+											}).join("") }
+										</tbody>
+									</table>
+								</div>
+								<div class="charts">
+									<input type="radio" name="charttype" id="durationovertime" class="" checked="checked"><label for="durationovertime">Segment Duration over Time</label><input type="radio" name="charttype" id="distancefromgold" class="distancefromgold"><label for="distancefromgold">Distance from Gold</label><br>
+									<div id="segmentchart" class="ct-chart"></div>
+								</div>
+							</div>
 							`
+							var currentgold =  Infinity
 
-
-							var data = {
+							var seriesdata = {
 								labels: lss.allattempts.map((a) => {
 									return a.id
 								}),
 								series: [
-									lss.allattempts.map((a) => {
+								{
+									name: "all",
+									data: lss.allattempts.map((a) => {
 										let split = a.splits.findBySegment(segment)
 										if ( !split.time ) return null
 										return {
@@ -367,22 +500,99 @@ function uploadFile(file) {
 											value: split?.segmenttime?.totalmilliseconds || null
 										}
 									})
-								]
-							}
+								},
+								{
+									name: "PB",
+									data: lss.allattempts.map((a) => {
+										let split = a.splits.findBySegment(segment)
+										if ( !a.pb || !split.time ) return null
+										return {
+											meta: "Full Run PB in Attempt #" + a.id,
+											value: split?.segmenttime?.totalmilliseconds || null
+										}
+									})
+								},
+								{
+									name: "Gold",
+									data: lss.allattempts.map((a) => {
+										let split = a.splits.findBySegment(segment)
+										if ( !split.time || split.segmenttime >= currentgold ) return null
+
+										currentgold = split.segmenttime
+										return {
+											meta: "Gold in Attempt #" + a.id,
+											value: split?.segmenttime?.totalmilliseconds || null
+										}
+									})
+								}
+							]}
+							currentgold = Infinity
+							let currentgoldsplit = Infinity
+							var golddistseriesdata = {
+								labels: lss.allattempts.map((a) => {
+									return a.id
+								}),
+								series: [
+								{
+									name: "all",
+									data: lss.allattempts.map((a) => {
+										let split = a.splits.findBySegment(segment)
+										if ( !split.time || !split.segmenttime ) return null
+										let diff = 0
+										if ( currentgoldsplit > split.segmenttime ) {
+											currentgoldsplit = split.segmenttime
+										}
+										diff = split.segmenttime - currentgoldsplit
+
+										console.log(diff)
+										return {
+											meta: "Attempt #" + a.id,
+											value: diff
+										}
+									})
+								},
+								{
+									name: "PB",
+									data: lss.allattempts.map((a) => {
+										return null
+										let split = a.splits.findBySegment(segment)
+										if ( !a.pb || !split.time ) return null
+										return {
+											meta: "Full Run PB in Attempt #" + a.id,
+											value: split?.segmenttime?.totalmilliseconds || null
+										}
+									})
+								},
+								{
+									name: "Gold",
+									data: lss.allattempts.map((a) => {
+										let split = a.splits.findBySegment(segment)
+										if ( !split.time || split.segmenttime >= currentgold ) return null
+
+										currentgold = split.segmenttime
+										return {
+											meta: "Gold in Attempt #" + a.id,
+											value: 0
+										}
+									})
+								}
+							]}
+
+							/*var data = {
+								labels: lss.allattempts.map((a) => {
+									return a.id
+								}),
+								series: golddistseriesdata
+							}*/
+							var timediff = Math.min(percent90th.sub( orderedattempts[0].split.segmenttime ).totalmilliseconds, 30000)
+
 							var options = {
 								lineSmooth: Chartist.Interpolation.monotoneCubic({
 									fillHoles: true
 
 								}),
-								low: Math.max(lss.allattempts.reduce((acc, a) => {
-									return acc.min(a.splits.findBySegment(segment)?.segmenttime || acc )
-								}, new Duration (1000*60*60*24)).sub(new Duration(1000*30)),0),
-								high: Math.max(
-									lss.allattempts.reduce((acc, a) => {
-										let split = a.splits.findBySegment(segment)
-										if ( !split.time ) return acc
-										return acc.max(a.splits.findBySegment(segment)?.segmenttime || acc )
-									}, new Duration (0)).add(new Duration(1000*30)),0),
+								low: Math.max(percent10th.sub(timediff),orderedattempts[0].split.segmenttime),
+								high: Math.max(percent90th.add(timediff),orderedattempts.last().split.segmenttime),
 								axisX: {
 									labelInterpolationFnc: function(value, index) {
 										return index % Math.round(lss.allattempts.length/12) === 0 ? value : null;
@@ -392,6 +602,11 @@ function uploadFile(file) {
 									scaleMinSpace: 20,
 									labelInterpolationFnc: function(value) {
 										return new Duration(value).plainshortformat()
+									}
+								},
+								series: {
+									"all": {
+										showArea: true
 									}
 								},
 								chartPadding: 30,
@@ -423,8 +638,21 @@ function uploadFile(file) {
 									})
 								]
 							}
-							new Chartist.Line('#segmentchart', data, options);
+							let segmentchart = new Chartist.Line('#segmentchart', seriesdata, options)
 
+							document.querySelector('.modalcontent .charts').addEventListener('change', (e) => {
+								let newdata = seriesdata
+								let newoptions = Object.assign(options)
+
+								if ( e.target.classList.contains('distancefromgold') ) {
+									newdata = golddistseriesdata
+									delete newoptions.low
+									delete newoptions.high
+
+								}
+								segmentchart.update( newdata, newoptions )
+
+							})
 						}
 
 						e.preventDefault()

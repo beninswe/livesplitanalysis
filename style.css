@@ -18,7 +18,7 @@
 }
 #drop-area {
 
-	border: 2px dashed #ccc;
+	border: 2px dashed rgba(255,215,0,0.25);
 	border-radius: 20px;
 	font-family: sans-serif;
 	margin: 100px auto;
@@ -32,7 +32,7 @@
 }
 
 #drop-area.highlight {
-	border-color: purple;
+	border-color: white;
 }
 
 .my-form {
@@ -270,7 +270,7 @@ body {
 	justify-self: center;
 }
 
-#attempthistory {
+.attempthistory {
 	width: 100%;
 }
 td.rightalign {
@@ -282,22 +282,22 @@ td.leftalign {
 	padding-left: 0.5rem;
 }
 
-#attempthistory .attempt {
+.attempthistory .attempt {
 	display: none;
 }
 
-input#pbonly:checked ~ #attempthistory .attempt.pbrun,
-input#completedonly:checked ~ #attempthistory .attempt.completed,
-input#allruns:checked ~ #attempthistory .attempt {
+input.pbonly:checked ~ .attempthistory .attempt.pbrun,
+input.completedonly:checked ~ .attempthistory .attempt.completed,
+input.allruns:checked ~ .attempthistory .attempt {
 	display: table-row;
 }
 
-input#pbonly:checked ~ #attempthistory .attempt.pbeven,
-input#completedonly:checked ~ #attempthistory .attempt.completedeven  {
+input.pbonly:checked ~ .attempthistory .attempt.pbeven,
+input.completedonly:checked ~ .attempthistory .attempt.completedeven  {
 	background: #2a2a2a;
 }
-input#pbonly:checked ~ #attempthistory .attempt.pbodd,
-input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
+input.pbonly:checked ~ .attempthistory .attempt.pbodd,
+input.completedonly:checked ~ .attempthistory .attempt.completedodd  {
 	background: #222222;
 }
 
@@ -306,7 +306,7 @@ input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
 	width: 47%;
 }
 
-.history label {
+.history label, .charts label {
 	margin-left: 0.5rem;
 	margin-right: 1.5rem;
 	line-height: 2.5rem;
@@ -415,12 +415,15 @@ input#completedonly:checked ~ #attempthistory .attempt.completedodd  {
 	width: var(--gw);
 }
 
-.bars > div .time, .bars > div .timesave, .bars > div .resets {
+.bars > div .time, .bars > div .timesave, .bars > div .resets, .bars > div .percentdetail {
 	font-size: 0.75rem;
 	white-space: nowrap;
 }
+.bars > div .percent {
+	white-space: nowrap;
+}
 
-#prettycomparisons, #prettycomparisons > div {
+.prettycomparisons, .prettycomparisons > div {
 	width: 100%;
 }
 
@@ -460,14 +463,28 @@ div .bars > div span.split {
 #byresets:checked ~ div .bars > div .resets,
 #byresetswo1:checked ~ div .bars > div .resets,
 #byresets:checked ~ div .bars > div:hover .resetpc,
-#byresetswo1:checked ~ div .bars > div:hover .resetpcex1 {
+#byresetswo1:checked ~ div .bars > div:hover .resetpcex1,
+#percent:checked ~ div .bars > div .percent,
+#percentex:checked ~ div .bars > div .percent,
+#percent:checked ~ div .bars > div .percentdetail,
+
+#percentex:checked ~ div .bars > div .percentdetail {
 	display: block;
+}
+#percent:checked ~ div .bars > div .pc,
+#percentex:checked ~ div .bars > div .pcex {
+	display: inline;
 }
 
 #byresets:checked ~ div .bars > div {
 	min-width: 10px;
 	width: var(--rsw);
 }
+
+#percentex:checked ~ div .bars > div {
+	width: var(--exw);
+}
+
 #byresets:checked ~ div .bars > div:hover {
 	width: max(200px, var(--rsw));
 }
@@ -486,6 +503,9 @@ div .bars > div span.split {
 	width: max(200px, var(--rswo));
 }
 
+#percentex:checked ~ div .bars > div:hover {
+	width: max(200px, var(--exw));
+}
 
 #progressbar {
 	position: relative;
@@ -499,19 +519,29 @@ div .bars > div span.split {
 }
 
 .modalviewerwrapper {
-	position: fixed;
+	transition: all 500ms ease-in-out;
+	position: absolute;
 	z-index: 300;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding: 3rem;
+
+}
+.bgblurer {
+	position: fixed;
 	background: rgba(0,0,0,.10);
 	backdrop-filter: blur(8px);
 	top: 0;
 	left: 0;
 	right: 0;
-	display: flex;
-	justify-content: center;
-	align-items: flex-start;
-	padding: 3rem;
 	bottom: 0;
 }
+
 
 #modalviewer {
 	border: 1px solid #d4d4d4;
@@ -520,7 +550,6 @@ div .bars > div span.split {
 	position: relative;
 	margin-top: 1rem;
 	padding: 1rem;
-	height: calc( 100vh - 6rem);
 	overflow-y: auto;
 	font-size: 0.95rem;
 }
@@ -549,9 +578,22 @@ a {
 	stroke: rgba(255,255,255,0.2);
 }
 
+.ct-series-a .ct-line,
+.ct-series-a .ct-point {
+  stroke:rgba(200,0,0,0.33);
+}
+.ct-series-a .ct-point {
+	stroke:rgba(125,0,0,1);
+}
+
 .ct-series-b .ct-line,
 .ct-series-b .ct-point {
-  stroke:rgba(0,150,0,0.75);
+  stroke:rgba(0,150,0,0.66);
+}
+
+.ct-series-c .ct-line,
+.ct-series-c .ct-point {
+  stroke:rgba(200,200,0,0.66);
 }
 
 .attemptspanel {
@@ -568,10 +610,18 @@ a {
 	fill: rgba(255,255,255,0.5);
 	/*stroke: rgba(255,255,255,0.35);*/
 }
-
+.segmentdata {
+	width: calc(100vw - 9rem);
+	display: flex;
+}
+.charts {
+	width: 50%;
+}
 #segmentchart {
-	width: 80vw;
-	height: 80vh;
+	width: 100%;
+	height: calc( 100vh - 15rem );
+	min-height: 45vh;
+
 }
 .splitsio .button {
 	padding-top: 2px;
@@ -588,4 +638,29 @@ a {
 
 .chartist-tooltip:before {
 	border-top-color: #999;
+}
+
+.graphslider {
+	height: 10px;
+	margin-left: 60px;
+	margin-right: 30px;
+}
+
+.graphslider .noUi-handle {
+	width: 20px;
+	height: 20px;
+}
+
+.graphslider .noUi-tooltip {
+    display: none;
+}
+.graphslider .noUi-active .noUi-tooltip {
+    display: block;
+}
+
+h2 {
+	padding-left: 0.5rem;
+}
+.panel > h2 {
+	padding: 0.5rem 0 0.5rem 0.5rem;
 }

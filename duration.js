@@ -69,7 +69,12 @@ export default class Duration {
 	}
 
 	formatcomparison(min, max) {
-		var ret = this.format()
+		let ret
+		if ( ( this.totalmilliseconds * ( this.negative ? -1 : 1 ) < 1000 ) ) {
+			ret = "0." + this.getFormattedMS()
+		} else {
+			ret = this.format()
+		}
 		var percentdiff = 0
 		if ( this.negative ) {
 			if ( min ) {

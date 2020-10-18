@@ -5,10 +5,12 @@
 			href="https://fonts.googleapis.com/css?family=Lato">
 
 		<title>LiveSplit Analysis</title>
-		<script type="module" src="script.js?v003"></script>
+		<script type="module" src="script.js?v004"></script>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.css" integrity="sha512-V0+DPzYyLzIiMiWCg3nNdY+NyIiK9bED/T1xNBj08CaIUyK3sXRpB26OUCIzujMevxY9TRJFHQIxTwgzb0jVLg==" crossorigin="anonymous" />
 		<link rel="stylesheet" href="chartist-plugin-tooltip.css">
-		<link rel="stylesheet" href="style.css?v003">
+		<link rel="stylesheet" href="nouislider.css">
+		<link rel="stylesheet" href="style.css?v004">
+
 
 	</head>
 	<body>
@@ -83,7 +85,7 @@
 				<label class="label attemptstab" for="tab-pbhistory">Attempt History</label>
 				<div class="panel">
 					<h2>At a glance</h2>
-					<div id="prettycomparisons">
+					<div id="prettycomparisons" class="prettycomparisons">
 						<input type="radio" name="timecomp" id="timespent" checked="checked"><label for="timespent">Time spent</label>
 						<input type="radio" name="timecomp" id="possibletimesave"><label for="possibletimesave">Possible time save</label>
 						<input type="radio" name="timecomp" id="byresets"><label for="byresets">Resets</label>
@@ -155,8 +157,8 @@
 				<div class="panel attemptspanel">
 					<div class="history">
 
-						<input type="radio" name="runtype" id="pbonly" checked="checked"><label for="pbonly">PBs Only</label><input type="radio" name="runtype" id="completedonly"><label for="completedonly">Completed Runs Only</label><input type="radio" name="runtype" id="allruns"><label for="allruns">All Runs</label><br>
-						<table id="attempthistory" class="table">
+						<input type="radio" name="runtype" id="pbonly" class="pbonly" checked="checked"><label for="pbonly">PBs Only</label><input type="radio" name="runtype" id="completedonly" class="completedonly"><label for="completedonly">Completed Runs Only</label><input type="radio" name="runtype" id="allruns"><label for="allruns">All Runs</label><br>
+						<table id="attempthistory" class="table attempthistory">
 							<tr>
 								<th>Attempt</th>
 								<th>Date</th>
@@ -172,12 +174,14 @@
 					<div class="charts">
 						<h3>Run Duration over time</h3>
 						<div id="rundurationchart" class="ct-chart ct-perfect-fourth"></div>
+						<div id="rundurationslider" class="graphslider"></div>
 					</div>
 				</div>
 			</div>
 
 		</div>
 		<div class="modalviewerwrapper hidden">
+			<div class="bgblurer"></div>
 			<div id="modalviewer">
 				<div class="modaltitle"></div>
 				<div class="modalcloser">X</div>
@@ -188,4 +192,5 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.js" integrity="sha512-9rxMbTkN9JcgG5euudGbdIbhFZ7KGyAuVomdQDI9qXfPply9BJh0iqA7E/moLCatH2JD4xBGHwV6ezBkCpnjRQ==" crossorigin="anonymous"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chartist-plugin-axistitle@0.0.7/dist/chartist-plugin-axistitle.min.js" integrity="sha256-prApUlf6GL5TScu+1fzXL6UDmTFLl9v2Bsk57h4zlK8=" crossorigin="anonymous"></script>
 	<script src="chartist-plugin-tooltip.js"></script>
+	<script src="nouislider.js"></script>
 </html>

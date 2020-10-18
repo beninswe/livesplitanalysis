@@ -1,6 +1,6 @@
-import Duration from './duration.js?v003'
+import Duration from './duration.js?v004'
 
-import { Icon, SplitGroup, Segment, Split, Attempt, AttemptCollection, SegmentArray, AverageAttempt, AttemptComparison } from './splitclasses.js?v003'
+import { Icon, SplitGroup, Segment, Split, Attempt, AttemptCollection, SegmentArray, AverageAttempt, AttemptComparison } from './splitclasses.js?v004'
 export default class SplitsFile {
 	lssDoc
 	game
@@ -89,6 +89,7 @@ export default class SplitsFile {
 			let sobsegment = seg.querySelector( "BestSegmentTime " + this.timingmethod ).textContent
 			let sobsplittime = sobcounter.add( sobsegment )
 			this.sob.updateSegmentSplit( segment, sobsplittime, sobcounter )
+			segment.gold = this.sob.splits.findBySegment( segment )
 			sobcounter = sobsplittime
 		} )
 
