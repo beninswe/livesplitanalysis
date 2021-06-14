@@ -1,6 +1,6 @@
-import Duration from './duration.js?v004'
+import Duration from './duration.js?v005'
 
-import { Icon, SplitGroup, Segment, Split, Attempt, AttemptCollection, SegmentArray, AverageAttempt, AttemptComparison } from './splitclasses.js?v004'
+import { Icon, SplitGroup, Segment, Split, Attempt, AttemptCollection, SegmentArray, AverageAttempt, AttemptComparison } from './splitclasses.js?v005'
 export default class SplitsFile {
 	lssDoc
 	game
@@ -141,6 +141,9 @@ export default class SplitsFile {
 	}
 
 	_formatDate( lssdate ) {
+		if ( !lssdate ) {
+			return "Unknown"
+		}
 		let [mon,day,year,hour,minute,second] = lssdate.split(/[\/: ]/)
 		return (year + "-" + mon + "-" + day + " " + hour + ":" + minute)
 	}

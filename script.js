@@ -1,7 +1,7 @@
-import SplitsFile from './splitsfile.js?v004'
+import SplitsFile from './splitsfile.js?v005'
 
-import {  AttemptComparison } from './splitclasses.js?v004'
-import Duration from './duration.js?v004'
+import {  AttemptComparison } from './splitclasses.js?v005'
+import Duration from './duration.js?v005'
 
 let dropArea = document.getElementById('drop-area')
 ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
