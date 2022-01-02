@@ -400,9 +400,9 @@ function uploadFile(file) {
 						if ( segment ) {
 							let orderedattempts = lss.allattempts.orderbytime( segment )
 							let percentilearray = lss.allattempts.percentilebase( segment )
-							let percent10th = percentilearray[Math.ceil( percentilearray.length *.10 ) ]
-							let percent90th = percentilearray[Math.ceil( percentilearray.length *.90 ) ]
-							let percent95th = percentilearray[Math.ceil( percentilearray.length *.95 ) ]
+							let percent10th = percentilearray[Math.ceil( percentilearray.length *.10 ) -1 ]
+							let percent90th = percentilearray[Math.ceil( percentilearray.length *.90 ) -1 ]
+							let percent95th = percentilearray[Math.ceil( percentilearray.length *.95 ) -1 ]
 							wrapper.classList.remove('hidden')
 							wrapper.querySelector('.modaltitle').innerHTML = `<h1>${segment.name}</h1>`
 							let goldcounter = 0
